@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#142b24" />
+  <meta name="description" content="Match archival photographs with the streets of Suzhou today — remotely or as a photographic city walk." />
+  <title>Gusu, Past &amp; Present</title>
+  <link rel="preconnect" href="https://unpkg.com" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="Gusu, Past and Present home">
+      <span class="brand-mark" aria-hidden="true">G</span>
+      <span><strong>Gusu, Past &amp; Present</strong><small>ARCHIVAL PHOTOGRAPH CITY WALK</small></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a href="#stories">Stories</a><a href="#route">Walk the route</a>
+      <span class="progress-pill"><b id="visited-count">0 / 3</b> revisited</span>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section id="home-page" class="page">
+      <section class="hero-section" aria-labelledby="hero-title">
+        <div class="hero-copy-wrap">
+          <p class="eyebrow">SUZHOU · ONE FRAME · TWO MOMENTS</p>
+          <h1 id="hero-title">Stand in the same place, decades later.</h1>
+          <p class="hero-copy">Match archival photographs with the streets of Gusu today. Explore from anywhere, or follow the route and make your own then-and-now image.</p>
+          <div class="hero-actions">
+            <button id="try-demo-btn" class="primary-btn" type="button">Try the comparison <span>→</span></button>
+            <a class="secondary-btn" href="#route">Start the city walk</a>
+          </div>
+          <div class="trust-row" aria-label="Experience details">
+            <span><i>03</i> verified viewpoints</span><span><i>⌖</i> optional location</span><span><i>○</i> photos stay on device</span>
+          </div>
+        </div>
+
+        <div class="hero-demo" id="hero-demo">
+          <div class="demo-stage compare-component">
+            <img class="compare-base" src="images/niujia_now.jpg" alt="Niujia Lane today" />
+            <div id="hero-old-wrap" class="compare-old-wrap"><img src="images/niujia_old.jpg" alt="Archival view of Niujia Lane" /></div>
+            <div id="hero-handle" class="compare-handle"><span>↔</span></div>
+            <span class="image-label label-past">ARCHIVE</span><span class="image-label label-now">TODAY</span>
+            <input id="hero-slider" class="compare-input" type="range" min="0" max="100" value="52" aria-label="Drag to compare archival and present-day photographs" />
+          </div>
+          <div class="demo-caption"><div><strong>Niujia Lane · 钮家巷</strong><span>Drag across the photograph</span></div><b>01</b></div>
+        </div>
+      </section>
+
+      <section id="stories" class="stories-section section-block" aria-labelledby="stories-title">
+        <div class="section-intro">
+          <div><p class="eyebrow">CHOOSE A CHANGE TO FOLLOW</p><h2 id="stories-title">Three corners. Three ways a city changes.</h2></div>
+          <p>Each photograph holds a different clue: the rhythm of street life, a changing urban edge, or architecture that endured.</p>
+        </div>
+        <div id="story-grid" class="story-grid"></div>
+      </section>
+
+      <section class="how-section section-block" aria-labelledby="how-title">
+        <div class="how-heading"><p class="eyebrow">A SMALL ACT OF FIELDWORK</p><h2 id="how-title">Look closely. Find the frame. Bring it forward.</h2></div>
+        <ol class="how-steps">
+          <li><span>01</span><div><strong>Choose a story</strong><p>Preview the transformation remotely before deciding whether to walk there.</p></div></li>
+          <li><span>02</span><div><strong>Find the viewpoint</strong><p>Use the map, bilingual place name and visual framing notes to locate the original angle.</p></div></li>
+          <li><span>03</span><div><strong>Make a new record</strong><p>Align the archival image, take your photograph and download a personal comparison postcard.</p></div></li>
+        </ol>
+      </section>
+
+      <section id="route" class="route-section section-block" aria-labelledby="route-title">
+        <div class="section-intro route-intro">
+          <div><p class="eyebrow">THE FIELD ROUTE</p><h2 id="route-title">Walk from one surviving clue to the next.</h2></div>
+          <div class="route-tools"><p>A north-to-south walk through central Gusu.</p><button id="locate-btn" class="locate-btn" type="button"><span>⌖</span> Locate me</button></div>
+        </div>
+        <div class="map-shell">
+          <div id="map" role="application" aria-label="Map of three photographic viewpoints"></div>
+          <div class="map-key"><span></span>3 archival viewpoints</div>
+          <div id="location-toast" class="map-toast hidden" role="status"></div>
+        </div>
+        <div id="route-stops" class="route-stops" aria-label="Route stops"></div>
+
+        <article id="place-card" class="place-card hidden" aria-live="polite">
+          <div class="place-visual-pair">
+            <figure><img id="old-photo" src="" alt="Archival view of the selected site" /><figcaption>ARCHIVE</figcaption></figure>
+            <figure><img id="now-photo" src="" alt="Present-day view of the selected site" /><figcaption>TODAY</figcaption></figure>
+          </div>
+          <div class="place-content">
+            <div class="place-topline"><p id="place-index" class="eyebrow"></p><span id="distance-badge" class="distance-badge">Locate yourself to see distance</span></div>
+            <h2 id="place-name"></h2><p id="place-cn" class="place-cn"></p>
+            <p id="place-desc" class="place-desc"></p>
+            <div class="change-focus"><small>LOOK FOR</small><strong id="change-focus"></strong></div>
+            <div class="shot-note"><span>◎</span><div><strong>Framing guide</strong><p id="shot-tip"></p></div></div>
+            <div class="place-actions">
+              <button id="remote-btn" class="secondary-btn" type="button">Explore from home</button>
+              <button id="start-btn" class="primary-btn" type="button">Capture on site <span>→</span></button>
+            </div>
+            <a id="nav-link" class="nav-link" href="#" target="_blank" rel="noreferrer">Open walking directions in Amap ↗</a>
+          </div>
+        </article>
+      </section>
+    </section>
+
+    <section id="camera-page" class="page hidden" aria-labelledby="camera-title">
+      <button id="back-home-btn" class="text-back" type="button">← Back to the story</button>
+      <div class="camera-heading">
+        <div><p id="camera-step" class="eyebrow">ON-SITE COMPARISON</p><h1 id="camera-title">Find the original frame.</h1><p id="camera-place-name"></p></div>
+        <div id="proximity-status" class="proximity-status"><span></span><b>Location optional</b></div>
+      </div>
+      <div class="field-layout">
+        <div>
+          <div class="camera-container">
+            <video id="camera" autoplay muted playsinline></video>
+            <div id="camera-placeholder" class="camera-placeholder"><span>◎</span><strong>Opening the camera</strong><p>Allow access to your rear camera</p></div>
+            <img id="overlay-photo" src="" alt="Archival photograph used for alignment" />
+            <div class="frame-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <div class="camera-guide">Match the strongest roofline and road edge first</div>
+          </div>
+          <div id="camera-error" class="camera-error hidden" role="alert"><strong>Camera unavailable</strong><p id="camera-error-text"></p></div>
+        </div>
+        <aside class="field-notes">
+          <p class="eyebrow">FIELD NOTES</p><h2>Three anchors to match</h2>
+          <ul id="anchor-list"></ul>
+          <div class="control-panel">
+            <div class="control-title"><label for="opacity-slider">Archival overlay</label><output id="opacity-value">50%</output></div>
+            <input id="opacity-slider" type="range" min="0" max="1" step="0.05" value="0.5" />
+            <div class="opacity-labels"><span>Present</span><span>Past</span></div>
+          </div>
+        </aside>
+      </div>
+      <div class="camera-actions">
+        <label for="upload-input" class="secondary-btn">Choose a photo</label><input id="upload-input" class="visually-hidden" type="file" accept="image/*" capture="environment" />
+        <button id="capture-btn" class="shutter-btn" type="button" aria-label="Take a photograph"><span></span></button>
+        <button id="reference-btn" class="secondary-btn" type="button">View archive</button>
+      </div>
+      <p class="privacy-note">Your photograph is processed on this device and is never uploaded.</p>
+    </section>
+
+    <canvas id="canvas" class="hidden"></canvas>
+
+    <section id="preview-page" class="page hidden" aria-labelledby="preview-title">
+      <button id="preview-back-btn" class="text-back" type="button">← Back</button>
+      <div class="preview-heading"><p class="eyebrow">YOUR COMPARISON</p><h1 id="preview-title">One corner, two moments.</h1><p id="preview-place-name"></p></div>
+      <div id="compare-stage" class="result-stage compare-component">
+        <img id="preview-new" class="compare-base" src="" alt="Present-day photograph" />
+        <div id="compare-old-wrap" class="compare-old-wrap"><img id="preview-old" src="" alt="Archival photograph" /></div>
+        <div id="compare-handle" class="compare-handle"><span>↔</span></div>
+        <span class="image-label label-past">ARCHIVE</span><span class="image-label label-now">PRESENT</span>
+        <input id="compare-slider" class="compare-input" type="range" min="0" max="100" value="50" aria-label="Drag to compare past and present" />
+      </div>
+      <p class="compare-hint">Drag across the image to reveal what changed — and what remained.</p>
+      <div class="result-meta">
+        <div><p class="eyebrow">WHAT TO NOTICE</p><h2 id="result-insight"></h2><p id="result-detail"></p></div>
+        <p class="source-note">Archival photograph supplied by the project researcher. Present-day reference or field photograph processed locally.</p>
+      </div>
+      <div class="preview-actions">
+        <button id="retake-btn" class="secondary-btn" type="button">Use another photo</button>
+        <button id="download-btn" class="primary-btn" type="button">Download postcard ↓</button>
+        <button id="finish-btn" class="text-btn" type="button">Mark as visited</button>
+      </div>
+    </section>
+  </main>
+  <footer><span>GUSU HISTORIC PHOTOGRAPH FIELD PROJECT</span><span>Look closely. Photograph safely. Credit the archive.</span></footer>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
