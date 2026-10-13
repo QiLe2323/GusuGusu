@@ -112,7 +112,9 @@
             <video id="camera" autoplay muted playsinline></video>
             <div id="camera-placeholder" class="camera-placeholder"><span>◎</span><strong>Opening the camera</strong><p>Allow access to your rear camera</p></div>
             <img id="overlay-photo" src="" alt="Archival photograph used for alignment" />
+            <div class="camera-grid" aria-hidden="true"></div>
             <div class="frame-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <div id="ghost-mode-label" class="ghost-mode-label">GHOST UNLOCKED · DRAG TO POSITION</div>
             <div class="camera-guide">Match the strongest roofline and road edge first</div>
           </div>
           <div id="camera-error" class="camera-error hidden" role="alert"><strong>Camera unavailable</strong><p id="camera-error-text"></p></div>
@@ -122,8 +124,18 @@
           <ul id="anchor-list"></ul>
           <div class="control-panel">
             <div class="control-title"><label for="opacity-slider">Archival overlay</label><output id="opacity-value">50%</output></div>
-            <input id="opacity-slider" type="range" min="0" max="1" step="0.05" value="0.5" />
+            <input id="opacity-slider" type="range" min="0" max="1" step="0.01" value="0.5" />
             <div class="opacity-labels"><span>Present</span><span>Past</span></div>
+            <div class="control-title second-control"><label for="zoom-slider">Ghost size</label><output id="zoom-value">100%</output></div>
+            <input id="zoom-slider" type="range" min="50" max="220" step="1" value="100" />
+            <div class="control-title second-control"><label for="rotation-slider">Fine rotation</label><output id="rotation-value">0°</output></div>
+            <input id="rotation-slider" type="range" min="-20" max="20" step="0.5" value="0" />
+            <div class="ghost-tools">
+              <button id="fit-btn" type="button">Contain</button>
+              <button id="lock-btn" type="button">Lock ghost</button>
+              <button id="reset-overlay-btn" type="button">Reset</button>
+            </div>
+            <p class="gesture-note">Drag the ghost over the live view. Pinch on mobile, or use the size and rotation controls.</p>
           </div>
         </aside>
       </div>
@@ -136,6 +148,58 @@
     </section>
 
     <canvas id="canvas" class="hidden"></canvas>
+
+    <section id="align-page" class="page hidden" aria-labelledby="align-title">
+      <button id="align-back-btn" class="text-back" type="button">← Back to camera</button>
+      <div class="align-heading">
+        <div>
+          <p class="eyebrow">LANDMARK ALIGNMENT</p>
+          <h1 id="align-title">Match the same points.</h1>
+          <p id="align-place-name"></p>
+        </div>
+        <div class="pair-progress"><b id="pair-count">0 / 4</b><span>pairs needed</span></div>
+      </div>
+      <div class="align-instruction" role="status">
+        <span id="align-step-number">1</span>
+        <div><strong id="align-instruction-title">Tap a landmark in the archive.</strong><p id="align-instruction-copy">Choose a fixed corner, roof junction or kerb edge that also appears in your new photograph.</p></div>
+      </div>
+      <div class="point-workspace">
+        <figure class="point-pane">
+          <figcaption><b>ARCHIVE</b><span>Tap first</span></figcaption>
+          <div id="old-point-stage" class="point-stage"><img id="align-old" src="" alt="Archival photograph for point matching" /><div id="old-point-layer" class="point-layer"></div></div>
+        </figure>
+        <figure class="point-pane">
+          <figcaption><b>PRESENT</b><span>Then tap the same landmark</span></figcaption>
+          <div id="new-point-stage" class="point-stage"><img id="align-new" src="" alt="New photograph for point matching" /><div id="new-point-layer" class="point-layer"></div></div>
+        </figure>
+      </div>
+      <div class="align-toolbar">
+        <div class="align-tool-copy"><strong>Use 4–6 well-spread pairs</strong><span>Avoid trees, people and other things that may have moved.</span></div>
+        <button id="undo-point-btn" class="secondary-btn" type="button">Undo point</button>
+        <button id="clear-points-btn" class="secondary-btn" type="button">Clear all</button>
+      </div>
+      <section id="alignment-review" class="alignment-review is-waiting" aria-labelledby="review-title">
+        <div class="review-copy">
+          <div><p class="eyebrow">LIVE ALIGNMENT CHECK</p><h2 id="review-title">Add four landmark pairs to preview the warp.</h2></div>
+          <div id="alignment-quality" class="quality-chip">WAITING FOR POINTS</div>
+        </div>
+        <div class="warp-stage">
+          <img id="align-preview-new" src="" alt="Present-day alignment base" />
+          <canvas id="warp-canvas" aria-label="Warped archival photograph"></canvas>
+          <span class="image-label label-past">ALIGNED ARCHIVE</span><span class="image-label label-now">PRESENT</span>
+        </div>
+        <div class="review-controls">
+          <label for="align-opacity-slider">Check transparency</label>
+          <input id="align-opacity-slider" type="range" min="0" max="1" step="0.01" value="0.5" disabled />
+          <output id="align-opacity-value">50%</output>
+        </div>
+      </section>
+      <div class="align-actions">
+        <button id="skip-align-btn" class="text-btn" type="button">Skip precision alignment</button>
+        <button id="confirm-align-btn" class="primary-btn" type="button" disabled>Use aligned comparison <span>→</span></button>
+      </div>
+      <p class="privacy-note">All point matching and image warping happens locally in this browser.</p>
+    </section>
 
     <section id="preview-page" class="page hidden" aria-labelledby="preview-title">
       <button id="preview-back-btn" class="text-back" type="button">← Back</button>
