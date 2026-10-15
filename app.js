@@ -24,16 +24,108 @@ const alignment = { pairs: [], pending: null, oldImage: null, newImage: null, ho
 
 function setCompare(value, wrap, handle) { wrap.style.clipPath = `inset(0 ${100 - value}% 0 0)`; handle.style.left = `${value}%`; }
 function buildStories() { places.forEach((place, index) => { const card = document.createElement("article"); card.className = "story-card"; card.dataset.id = place.id; card.innerHTML = `<div class="story-image"><img src="${place.oldPhoto}" alt="Archival view of ${place.name}"><span class="story-number">0${index + 1}</span><span class="story-era">ARCHIVE</span></div><div class="story-body"><span class="story-type">${place.type}</span><h3>${place.storyTitle}</h3><div class="story-cn">${place.name} · ${place.cn}</div><p class="story-hook">${place.hook}</p><div class="story-actions"><button class="story-preview" type="button">See the change</button><button class="story-route" type="button">Map ↓</button></div></div>`; card.querySelector(".story-preview").addEventListener("click", () => openRemote(place)); card.querySelector(".story-route").addEventListener("click", () => { selectPlace(place); $("route").scrollIntoView({ behavior: "smooth" }); }); el.storyGrid.appendChild(card); }); }
-function buildRouteStops() { places.forEach((place, index) => { const button = document.createElement("button"); button.type = "button"; button.className = "route-stop"; button.dataset.id = place.id; button.innerHTML = `<b>0${index + 1}</b><span>${place.name}<small>${place.cn}</small></span>`; button.addEventListener("click", () => selectPlace(place, true)); el.routeStops.appendChild(button); }); }
-const pinIcon = (index, active = false) => L.divIcon({ className: "", html: `<div class="place-pin${active ? " is-active" : ""}"><span><b>0${index + 1}</b></span></div>`, iconSize: [36, 42], iconAnchor: [18, 39] });
-function initMap() { map = L.map("map", { zoomControl: false, scrollWheelZoom: false }).setView([31.31, 120.6245], 14); L.control.zoom({ position: "bottomright" }).addTo(map); L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(map); const order = [places[1], places[0], places[2]]; L.polyline(order.map(place => [place.lat, place.lng]), { color: "#a54b38", weight: 2, opacity: .55, dashArray: "5 8" }).addTo(map); places.forEach((place, index) => { const marker = L.marker([place.lat, place.lng], { icon: pinIcon(index) }).addTo(map); marker.bindTooltip(`${place.name} · ${place.cn}`, { direction: "top", offset: [0, -29] }); marker.on("click", () => selectPlace(place, true)); markers.set(place.id, marker); }); map.fitBounds(L.latLngBounds(places.map(place => [place.lat, place.lng])).pad(.35)); }
-function selectPlace(place, scroll = false) { selectedPlace = place; places.forEach((item, index) => markers.get(item.id)?.setIcon(pinIcon(index, item.id === place.id))); document.querySelectorAll(".route-stop").forEach(item => item.classList.toggle("is-active", item.dataset.id === place.id)); const index = places.indexOf(place); el.oldPhoto.src = place.oldPhoto; el.nowPhoto.src = place.nowPhoto; el.placeIndex.textContent = `VIEWPOINT 0${index + 1} · ${place.type}`; el.placeName.textContent = place.name; el.placeCn.textContent = place.cn; el.placeDesc.textContent = place.description; el.changeFocus.textContent = place.focus; el.shotTip.textContent = place.shotTip; el.navLink.href = `https://uri.amap.com/search?keyword=${encodeURIComponent(place.query)}&city=苏州&callnative=1`; el.placeCard.classList.remove("hidden"); updateDistance(); map?.flyTo([place.lat, place.lng], 16, { duration: .6 }); if (scroll) setTimeout(() => el.placeCard.scrollIntoView({ behavior: "smooth", block: "center" }), 300); }
-function showPage(name) { Object.entries(pages).forEach(([key, page]) => page.classList.toggle("hidden", key !== name)); window.scrollTo({ top: 0, behavior: "smooth" }); if (name === "home") setTimeout(() => map?.invalidateSize(), 120); }
+function buildRouteStops() {
+  places.forEach((place, index) => {
+    const card = document.createElement("article");
+    card.className = "route-stop";
+    card.dataset.id = place.id;
+    card.innerHTML = `<button class="route-stop-main" type="button" aria-label="Show ${place.name} on the map"><span class="route-thumb"><img src="${place.oldPhoto}" alt=""></span><span class="route-stop-copy"><small class="route-status"></small><strong>${place.name}</strong><span>${place.cn}</span></span></button><div class="route-stop-actions"><button class="route-preview" type="button">Compare</button><button class="route-capture" type="button">Camera</button></div>`;
+    card.querySelector(".route-stop-main").addEventListener("click", () => selectPlace(place, true));
+    card.querySelector(".route-preview").addEventListener("click", () => openRemote(place));
+    card.querySelector(".route-capture").addEventListener("click", () => { selectPlace(place); startField(); });
+    el.routeStops.appendChild(card);
+  });
+}
+
+const SUZHOU_BOUNDS = [[120.32, 31.02], [120.98, 31.62]];
+function isInsideSuzhou(position) { return position.lng >= SUZHOU_BOUNDS[0][0] && position.lng <= SUZHOU_BOUNDS[1][0] && position.lat >= SUZHOU_BOUNDS[0][1] && position.lat <= SUZHOU_BOUNDS[1][1]; }
+function createPinElement(index, place) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "place-pin";
+  button.setAttribute("aria-label", `${place.name}, ${visited.has(place.id) ? "visited" : "not visited"}`);
+  button.innerHTML = `<span><b>${visited.has(place.id) ? "✓" : `0${index + 1}`}</b></span>`;
+  button.addEventListener("click", event => { event.stopPropagation(); selectPlace(place, true); });
+  return button;
+}
+function updateMarkerVisuals() {
+  places.forEach((place, index) => {
+    const marker = markers.get(place.id);
+    if (!marker) return;
+    const node = marker.getElement();
+    const isVisited = visited.has(place.id);
+    node.classList.toggle("is-active", place.id === selectedPlace.id);
+    node.classList.toggle("is-visited", isVisited);
+    node.querySelector("b").textContent = isVisited ? "✓" : `0${index + 1}`;
+    node.setAttribute("aria-label", `${place.name}, ${isVisited ? "visited" : "not visited"}`);
+  });
+}
+function initMap() {
+  map = new maplibregl.Map({
+    container: "map",
+    style: "https://tiles.openfreemap.org/styles/positron",
+    center: [120.6245, 31.31],
+    zoom: 14,
+    minZoom: 11.5,
+    maxZoom: 18,
+    maxBounds: SUZHOU_BOUNDS,
+    attributionControl: false
+  });
+  map.scrollZoom.disable();
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
+  map.addControl(new maplibregl.AttributionControl({ compact: true }), "top-right");
+  map.on("load", () => {
+    const order = [places[1], places[0], places[2]];
+    map.addSource("field-route", { type: "geojson", data: { type: "Feature", geometry: { type: "LineString", coordinates: order.map(place => [place.lng, place.lat]) } } });
+    map.addLayer({ id: "field-route", type: "line", source: "field-route", paint: { "line-color": "#a54b38", "line-width": 2.5, "line-opacity": .58, "line-dasharray": [2, 3] } });
+  });
+  places.forEach((place, index) => {
+    const node = createPinElement(index, place);
+    const marker = new maplibregl.Marker({ element: node, anchor: "bottom" }).setLngLat([place.lng, place.lat]).addTo(map);
+    markers.set(place.id, marker);
+  });
+  const bounds = new maplibregl.LngLatBounds();
+  places.forEach(place => bounds.extend([place.lng, place.lat]));
+  map.fitBounds(bounds, { padding: { top: 90, right: 55, bottom: 155, left: 55 }, maxZoom: 14.3, duration: 0 });
+}
+function selectPlace(place, scroll = false) {
+  selectedPlace = place;
+  updateMarkerVisuals();
+  document.querySelectorAll(".route-stop").forEach(item => item.classList.toggle("is-active", item.dataset.id === place.id));
+  const index = places.indexOf(place);
+  el.oldPhoto.src = place.oldPhoto; el.nowPhoto.src = place.nowPhoto;
+  el.placeIndex.textContent = `VIEWPOINT 0${index + 1} · ${place.type}`;
+  el.placeName.textContent = place.name; el.placeCn.textContent = place.cn; el.placeDesc.textContent = place.description;
+  el.changeFocus.textContent = place.focus; el.shotTip.textContent = place.shotTip;
+  el.navLink.href = `https://uri.amap.com/search?keyword=${encodeURIComponent(place.query)}&city=苏州&callnative=1`;
+  el.placeCard.classList.remove("hidden");
+  updateDistance();
+  map?.flyTo({ center: [place.lng, place.lat], zoom: 16, duration: 650, essential: true });
+  const activeCard = document.querySelector(`.route-stop[data-id="${place.id}"]`);
+  if (activeCard) el.routeStops.scrollTo({ left: activeCard.offsetLeft - (el.routeStops.clientWidth - activeCard.offsetWidth) / 2, behavior: "smooth" });
+  if (scroll && window.matchMedia("(min-width: 681px)").matches) setTimeout(() => el.placeCard.scrollIntoView({ behavior: "smooth", block: "center" }), 300);
+}function showPage(name) { Object.entries(pages).forEach(([key, page]) => page.classList.toggle("hidden", key !== name)); window.scrollTo({ top: 0, behavior: "smooth" }); if (name === "home") setTimeout(() => map?.resize(), 120); }
 function distanceMeters(a, b) { const rad = value => value * Math.PI / 180, dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng), x = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2; return 6371000 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x)); }
 const formatDistance = distance => distance < 1000 ? `About ${Math.round(distance / 10) * 10} m away` : `About ${(distance / 1000).toFixed(1)} km away`;
 function updateDistance() { if (!userPosition) { el.distanceBadge.textContent = "Locate yourself to see distance"; el.proximityStatus.querySelector("b").textContent = "Location optional"; return; } const distance = distanceMeters(userPosition, selectedPlace); el.distanceBadge.textContent = formatDistance(distance); el.proximityStatus.classList.toggle("is-far", distance > 120); el.proximityStatus.querySelector("b").textContent = distance <= 120 ? "Within the suggested viewpoint" : formatDistance(distance); }
 function toast(message) { el.locationToast.textContent = message; el.locationToast.classList.remove("hidden"); clearTimeout(toast.timer); toast.timer = setTimeout(() => el.locationToast.classList.add("hidden"), 3800); }
-function locateUser() { if (!navigator.geolocation) { toast("Location is unavailable here. You can still explore every story."); return; } el.locateBtn.disabled = true; el.locateBtn.innerHTML = "<span>⌖</span> Locating…"; navigator.geolocation.getCurrentPosition(position => { userPosition = { lat: position.coords.latitude, lng: position.coords.longitude }; if (userMarker) map.removeLayer(userMarker); userMarker = L.marker([userPosition.lat, userPosition.lng], { icon: L.divIcon({ className: "", html: '<div class="user-pin"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }) }).addTo(map).bindTooltip("You are here"); map.flyTo([userPosition.lat, userPosition.lng], 16); updateDistance(); toast("Location found. Each viewpoint now shows its distance."); resetLocate(); }, error => { toast(error.code === 1 ? "Location permission was not granted. The remote experience still works." : "Your location could not be determined."); resetLocate(); }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }); }
+function locateUser() {
+  if (!navigator.geolocation) { toast("Location is unavailable here. You can still explore every story."); return; }
+  el.locateBtn.disabled = true; el.locateBtn.innerHTML = "<span>⌖</span> Locating…";
+  navigator.geolocation.getCurrentPosition(position => {
+    userPosition = { lat: position.coords.latitude, lng: position.coords.longitude };
+    userMarker?.remove(); userMarker = null;
+    if (isInsideSuzhou(userPosition)) {
+      const node = document.createElement("div"); node.className = "user-pin"; node.setAttribute("aria-label", "Your location");
+      userMarker = new maplibregl.Marker({ element: node }).setLngLat([userPosition.lng, userPosition.lat]).addTo(map);
+      map.flyTo({ center: [userPosition.lng, userPosition.lat], zoom: 16, duration: 650, essential: true });
+      toast("Location found. Each viewpoint now shows its distance.");
+    } else {
+      toast("You are outside the Suzhou map area. Distances are shown, but the map stays in Suzhou.");
+    }
+    updateDistance(); resetLocate();
+  }, error => { toast(error.code === 1 ? "Location permission was not granted. The remote experience still works." : "Your location could not be determined."); resetLocate(); }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
+}
 function resetLocate() { el.locateBtn.disabled = false; el.locateBtn.innerHTML = "<span>⌖</span> Locate me"; }
 
 function applyOverlayTransform() { el.overlayPhoto.style.transform = `translate3d(${overlayState.x}px,${overlayState.y}px,0) rotate(${overlayState.rotation}deg) scale(${overlayState.scale})`; el.overlayPhoto.style.objectFit = overlayState.fit; el.zoomSlider.value = Math.round(overlayState.scale * 100); el.rotationSlider.value = overlayState.rotation; el.zoomValue.value = `${Math.round(overlayState.scale * 100)}%`; el.rotationValue.value = `${Number(overlayState.rotation).toFixed(overlayState.rotation % 1 ? 1 : 0)}°`; el.fitBtn.textContent = overlayState.fit === "cover" ? "Contain" : "Cover"; el.lockBtn.textContent = overlayState.locked ? "Unlock ghost" : "Lock ghost"; el.lockBtn.classList.toggle("is-active", overlayState.locked); el.cameraContainer.classList.toggle("is-locked", overlayState.locked); el.ghostModeLabel.textContent = overlayState.locked ? "GHOST LOCKED" : "GHOST UNLOCKED · DRAG TO POSITION"; }
@@ -94,8 +186,23 @@ function confirmAlignment() { if (!alignment.homography) return; let alignedOld;
 
 function drawCover(context, image, x, y, width, height) { const scale = Math.max(width / image.width, height / image.height), sourceWidth = width / scale, sourceHeight = height / scale, sourceX = (image.width - sourceWidth) / 2, sourceY = (image.height - sourceHeight) / 2; context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height); }
 async function downloadPostcard() { const original = el.downloadBtn.textContent; el.downloadBtn.disabled = true; el.downloadBtn.textContent = "Preparing…"; try { const [oldImage,newImage] = await Promise.all([loadImage(el.previewOld.src),loadImage(el.previewNew.src)]), canvas = document.createElement("canvas"), context = canvas.getContext("2d"); canvas.width = 1600; canvas.height = 1000; context.fillStyle = "#f2efe7"; context.fillRect(0,0,canvas.width,canvas.height); drawCover(context,oldImage,70,70,710,650); drawCover(context,newImage,820,70,710,650); context.fillStyle = "#17231f"; context.font = "700 24px Arial"; context.fillText("ALIGNED ARCHIVE",70,758); context.fillText("PRESENT",820,758); context.fillStyle = "#a54b38"; context.font = "700 22px Arial"; context.fillText("GUSU, PAST & PRESENT",70,830); context.fillStyle = "#17231f"; context.font = "700 52px Georgia"; context.fillText(selectedPlace.name,70,895); context.fillStyle = "#66716b"; context.font = "24px Arial"; context.fillText(selectedPlace.cn,70,935); context.textAlign = "right"; context.font = "20px Arial"; context.fillText("One corner · Two moments",1530,894); context.fillText(new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"}),1530,932); context.textAlign = "left"; canvas.toBlob(blob => { const url = URL.createObjectURL(blob), link = document.createElement("a"); link.href = url; link.download = `gusu-${selectedPlace.id}-postcard.png`; link.click(); setTimeout(() => URL.revokeObjectURL(url),1000); },"image/png"); } catch { alert("The postcard could not be created. Please try again."); } finally { el.downloadBtn.disabled = false; el.downloadBtn.textContent = original; } }
-function finishVisit() { visited.add(selectedPlace.id); localStorage.setItem("gusu-visited",JSON.stringify([...visited])); updateVisited(); showPage("home"); selectPlace(selectedPlace); setTimeout(() => el.placeCard.scrollIntoView({behavior:"smooth",block:"center"}),200); toast("Revisit marked complete on this device."); }
-function updateVisited() { el.visitedCount.textContent = `${visited.size} / ${places.length}`; }
+function finishVisit() {
+  visited.add(selectedPlace.id);
+  localStorage.setItem("gusu-visited", JSON.stringify([...visited]));
+  updateVisited(); showPage("home"); selectPlace(selectedPlace);
+  if (window.matchMedia("(min-width: 681px)").matches) setTimeout(() => el.placeCard.scrollIntoView({ behavior: "smooth", block: "center" }), 200);
+  toast("Revisit marked complete on this device.");
+}
+function updateVisited() {
+  el.visitedCount.textContent = `${visited.size} / ${places.length}`;
+  document.querySelectorAll(".route-stop").forEach(card => {
+    const done = visited.has(card.dataset.id);
+    card.classList.toggle("is-visited", done);
+    const status = card.querySelector(".route-status");
+    if (status) status.textContent = done ? "✓ VISITED" : "○ NOT VISITED";
+  });
+  updateMarkerVisuals();
+}
 
 el.heroSlider.addEventListener("input", event => setCompare(Number(event.target.value),el.heroOldWrap,el.heroHandle));
 el.tryDemoBtn.addEventListener("click", () => { $("hero-demo").scrollIntoView({behavior:"smooth",block:"center"}); $("hero-demo").animate([{transform:"scale(1)"},{transform:"scale(1.018)"},{transform:"scale(1)"}],{duration:700}); });
@@ -117,3 +224,7 @@ el.retakeBtn.addEventListener("click",async () => { if (remoteMode) { showPage("
 el.downloadBtn.addEventListener("click",downloadPostcard); el.finishBtn.addEventListener("click",finishVisit); window.addEventListener("resize",renderPointMarkers); window.addEventListener("beforeunload",stopCamera); document.addEventListener("visibilitychange",() => { if (document.hidden && !pages.camera.classList.contains("hidden")) stopCamera(); });
 
 buildStories(); buildRouteStops(); initMap(); updateVisited(); selectPlace(places[0]); setCompare(52,el.heroOldWrap,el.heroHandle); applyOverlayTransform(); updateAlignmentUI();
+
+
+
+
