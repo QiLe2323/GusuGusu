@@ -7,8 +7,9 @@
   <meta name="description" content="Match archival photographs with the streets of Suzhou today — remotely or as a photographic city walk." />
   <title>Gusu, Past &amp; Present</title>
   <link rel="preconnect" href="https://unpkg.com" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://tiles.openfreemap.org" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.10.0/dist/maplibre-gl.css" />
+  <link rel="stylesheet" href="style.css?v=3" />
 </head>
 <body>
   <header class="site-header">
@@ -74,10 +75,10 @@
         </div>
         <div class="map-shell">
           <div id="map" role="application" aria-label="Map of three photographic viewpoints"></div>
-          <div class="map-key"><span></span>3 archival viewpoints</div>
+          <div class="map-key" aria-label="Map legend"><span><i class="key-unvisited"></i>Not visited</span><span><i class="key-visited">✓</i>Visited</span></div>
           <div id="location-toast" class="map-toast hidden" role="status"></div>
+          <div id="route-stops" class="route-stops" aria-label="Swipe through photographic viewpoints"></div>
         </div>
-        <div id="route-stops" class="route-stops" aria-label="Route stops"></div>
 
         <article id="place-card" class="place-card hidden" aria-live="polite">
           <div class="place-visual-pair">
@@ -224,7 +225,10 @@
     </section>
   </main>
   <footer><span>GUSU HISTORIC PHOTOGRAPH FIELD PROJECT</span><span>Look closely. Photograph safely. Credit the archive.</span></footer>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="app.js"></script>
+  <script src="https://unpkg.com/maplibre-gl@5.10.0/dist/maplibre-gl.js"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
+
+
+
