@@ -1,15 +1,24 @@
-const makePlace = data => ({
-  type: "URBAN MEMORY",
-  storyTitle: `${data.name}: the same view, a changed city`,
-  hook: `Compare the archival frame with the present-day photograph and follow the details that still anchor ${data.name}.`,
-  description: `This matched pair returns to the recorded viewpoint at ${data.cn} and uses fixed architectural, street and waterside features to make change visible.`,
-  shotTip: "Use the historic thumbnail as a framing guide. Match one strong vertical edge first, then the road, canal or roofline.",
-  anchors: data.anchors || ["The main architectural edge", "The road or canal line", "The roofline and mature trees"],
-  insight: data.insight || "The viewpoint remains legible even as the life around it changes.",
-  detail: data.detail || "Compare building edges, vegetation, movement and the way public space meets the historic fabric.",
-  query: `苏州市姑苏区${data.cn.split("·")[0]}`,
-  ...data
-});
+const imageVariant = (src, folder) => src.replace("images/", `images/${folder}/`).replace(/\.[^.]+$/, ".webp");
+const makePlace = data => {
+  const oldOriginal = data.oldPhoto, nowOriginal = data.nowPhoto;
+  return {
+    type: "URBAN MEMORY",
+    storyTitle: `${data.name}: the same view, a changed city`,
+    hook: `Compare the archival frame with the present-day photograph and follow the details that still anchor ${data.name}.`,
+    description: `This matched pair returns to the recorded viewpoint at ${data.cn} and uses fixed architectural, street and waterside features to make change visible.`,
+    shotTip: "Use the historic thumbnail as a framing guide. Match one strong vertical edge first, then the road, canal or roofline.",
+    anchors: data.anchors || ["The main architectural edge", "The road or canal line", "The roofline and mature trees"],
+    insight: data.insight || "The viewpoint remains legible even as the life around it changes.",
+    detail: data.detail || "Compare building edges, vegetation, movement and the way public space meets the historic fabric.",
+    query: `苏州市姑苏区${data.cn.split("·")[0]}`,
+    ...data,
+    oldOriginal,
+    nowOriginal,
+    oldPhoto: imageVariant(oldOriginal, "optimized"),
+    nowPhoto: imageVariant(nowOriginal, "optimized"),
+    thumbPhoto: imageVariant(oldOriginal, "thumbs")
+  };
+};
 
 const places = [
   makePlace({ id:"liaojia", name:"Liaojia Lane", cn:"廖家巷", lat:31.3268207, lng:120.6073955, oldPhoto:"images/10002A-廖家巷-年代不详-苏州旧街巷图录.jpg", nowPhoto:"images/10002B-廖家巷-年代不详-苏州旧街巷图录-2024.jpg", oldCredit:"年代不详 · 选自《苏州旧街巷图录》", nowCredit:"2024 · 来源：古城阳面", focus:"The lane entrance, white wall and changing residential edge", anchors:["The lane opening on the left","The long white wall","The roofline behind the junction"] }),
@@ -61,6 +70,7 @@ let heroCompareMode = "reveal", heroBlinkTimer = null, heroBlinkVisible = true;
 const formatIndex = index => String(index + 1).padStart(2, "0");
 const fieldCredit = () => `${new Date().getFullYear()} · Your field photograph`;
 const featuredPlaces = ["guanqian", "pingjiang", "panmen"].map(id => places.find(place => place.id === id));
+function loadDesktopImages() { if (!window.matchMedia("(min-width: 681px)").matches) return; document.querySelectorAll("img[data-desktop-src]").forEach(image => { if (!image.src) image.src = image.dataset.desktopSrc; }); }
 const onboardingSteps = [
   { icon:"⌖", kicker:"STEP 1 · DISCOVER", title:"Choose a photograph on the map.", copy:"Every thumbnail marks the viewpoint where an archival photograph was taken. Tap one to preview the place and its framing clues." },
   { icon:"◎", kicker:"STEP 2 · REPHOTOGRAPH", title:"Stand there and find the old frame.", copy:"Open the camera, match a roofline or street edge, then adjust the ghost photograph until the two moments line up." },
@@ -105,7 +115,7 @@ function renderCollection() {
   if (!routePlaces.length) {
     el.collectionList.innerHTML = `<div class="collection-empty"><span>♡</span><strong>Your route is empty.</strong><p>Save archival photographs from the map to build a personal Gusu walk.</p></div>`;
   } else {
-    el.collectionList.innerHTML = routePlaces.map((place, index) => { const status = visitStatus(place), record = visitRecords[place.id]; return `<article class="collection-item ${record ? "is-visited" : ""}" data-id="${place.id}"><span class="collection-order">${String(index + 1).padStart(2,"0")}</span><img src="${record?.photo || place.oldPhoto}" alt=""><div><small>${status.label}</small><strong>${place.name}</strong><span>${place.cn} · ${status.detail}</span></div><button type="button" aria-label="Remove ${place.name} from route">×</button></article>`; }).join("");
+    el.collectionList.innerHTML = routePlaces.map((place, index) => { const status = visitStatus(place), record = visitRecords[place.id]; return `<article class="collection-item ${record ? "is-visited" : ""}" data-id="${place.id}"><span class="collection-order">${String(index + 1).padStart(2,"0")}</span><img src="${record?.photo || place.thumbPhoto}" loading="lazy" decoding="async" alt=""><div><small>${status.label}</small><strong>${place.name}</strong><span>${place.cn} · ${status.detail}</span></div><button type="button" aria-label="Remove ${place.name} from route">×</button></article>`; }).join("");
     el.collectionList.querySelectorAll(".collection-item").forEach(item => {
       item.addEventListener("click", event => { const place = places.find(candidate => candidate.id === item.dataset.id); if (event.target.tagName === "BUTTON") { toggleSaved(place); renderCollection(); return; } closeCollection(); selectPlace(place, false, true); });
     });
@@ -157,7 +167,7 @@ function buildStories() {
   featuredPlaces.forEach(place => {
     const index = places.indexOf(place), card = document.createElement("article");
     card.className = "story-card"; card.dataset.id = place.id;
-    card.innerHTML = `<div class="story-image"><img src="${place.oldPhoto}" alt="Archival view of ${place.name}"><span class="story-number">${formatIndex(index)}</span><span class="story-era">ARCHIVE</span><span class="story-source">${place.oldCredit}</span></div><div class="story-body"><span class="story-type">${place.type}</span><h3>${place.storyTitle}</h3><div class="story-cn">${place.name} · ${place.cn}</div><p class="story-hook">${place.hook}</p><div class="story-actions"><button class="story-preview" type="button">See the change</button><button class="story-route" type="button">Find on map ↓</button></div></div>`;
+    card.innerHTML = `<div class="story-image"><img data-desktop-src="${place.oldPhoto}" loading="lazy" decoding="async" alt="Archival view of ${place.name}"><span class="story-number">${formatIndex(index)}</span><span class="story-era">ARCHIVE</span><span class="story-source">${place.oldCredit}</span></div><div class="story-body"><span class="story-type">${place.type}</span><h3>${place.storyTitle}</h3><div class="story-cn">${place.name} · ${place.cn}</div><p class="story-hook">${place.hook}</p><div class="story-actions"><button class="story-preview" type="button">See the change</button><button class="story-route" type="button">Find on map ↓</button></div></div>`;
     card.querySelector(".story-preview").addEventListener("click", () => openRemote(place));
     card.querySelector(".story-route").addEventListener("click", () => { selectPlace(place); $("route").scrollIntoView({ behavior: "smooth" }); });
     el.storyGrid.appendChild(card);
@@ -183,7 +193,7 @@ function updateMapSelectionCard(place) {
   const record = visitRecords[place.id], saved = savedPlaces.has(place.id), status = visitStatus(place);
   card.dataset.id = place.id; card.classList.toggle("is-visited", Boolean(record)); card.classList.toggle("is-saved", saved);
   card.querySelector(".route-stop-main").setAttribute("aria-label", `Open ${place.name}. ${place.oldCredit}`);
-  card.querySelector("img").src = place.oldPhoto;
+  card.querySelector("img").src = place.thumbPhoto;
   card.querySelector(".route-status").textContent = status.label;
   card.querySelector("strong").textContent = place.name;
   card.querySelector(".route-name-cn").textContent = place.cn;
@@ -203,7 +213,7 @@ function createPinElement(index, place) {
   button.type = "button";
   button.className = "place-pin photo-pin";
   button.setAttribute("aria-label", `${place.name}, archival photograph, ${place.oldCredit}, ${visited.has(place.id) ? "visited" : "not visited"}`);
-  button.innerHTML = `<span class="photo-pin-frame"><img src="${place.oldPhoto}" alt="" draggable="false"></span><b class="photo-pin-badge" aria-hidden="true">${visited.has(place.id) ? "✓" : ""}</b>`;
+  button.innerHTML = `<span class="photo-pin-frame"><img src="${place.thumbPhoto}" alt="" decoding="async" draggable="false"></span><b class="photo-pin-badge" aria-hidden="true">${visited.has(place.id) ? "✓" : ""}</b>`;
   button.addEventListener("click", event => { event.stopPropagation(); selectPlace(place, true); });
   return button;
 }
@@ -258,7 +268,7 @@ function selectPlace(place, scroll = false, moveMap = true) {
   updateMarkerVisuals();
   updateMapSelectionCard(place);
   const index = places.indexOf(place);
-  el.oldPhoto.src = place.oldPhoto; el.nowPhoto.src = place.nowPhoto;
+  if (window.matchMedia("(min-width: 681px)").matches) { el.oldPhoto.src = place.oldPhoto; el.nowPhoto.src = place.nowPhoto; }
   el.placeIndex.textContent = `VIEWPOINT ${formatIndex(index)} · ${place.type}`;
   $("old-credit").textContent = place.oldCredit; $("now-credit").textContent = place.nowCredit;
   el.placeName.textContent = place.name; el.placeCn.textContent = place.cn; el.placeDesc.textContent = place.description;
@@ -411,10 +421,10 @@ $("blink-toggle").addEventListener("click", () => blinkTimer ? stopBlinkComparis
 $("compare-fullscreen").addEventListener("click", async () => { try { if (document.fullscreenElement) await document.exitFullscreen(); else await $("compare-studio").requestFullscreen(); } catch { toast("Full-screen view is unavailable in this browser."); } });
 el.previewBackBtn.addEventListener("click",() => { if (remoteMode) { showPage("home"); $("stories").scrollIntoView({behavior:"smooth"}); } else { showPage("align"); renderPointMarkers(); } });
 el.retakeBtn.addEventListener("click",async () => { if (remoteMode) { showPage("home"); $("stories").scrollIntoView({behavior:"smooth"}); } else { showPage("camera"); await startCamera(); } });
-el.downloadBtn.addEventListener("click",downloadPostcard); el.finishBtn.addEventListener("click",finishVisit); window.addEventListener("resize",renderPointMarkers); window.addEventListener("beforeunload",stopCamera); document.addEventListener("visibilitychange",() => { if (document.hidden && !pages.camera.classList.contains("hidden")) stopCamera(); });
+el.downloadBtn.addEventListener("click",downloadPostcard); el.finishBtn.addEventListener("click",finishVisit); window.addEventListener("resize",() => { renderPointMarkers(); loadDesktopImages(); }); window.addEventListener("beforeunload",stopCamera); document.addEventListener("visibilitychange",() => { if (document.hidden && !pages.camera.classList.contains("hidden")) stopCamera(); });
 document.addEventListener("keydown", event => { if (event.key !== "Escape") return; if (!el.collectionDrawer.classList.contains("hidden")) closeCollection(); else if (!$("onboarding").classList.contains("hidden")) closeOnboarding(); });
 
-buildStories(); buildRouteStops(); initMap(); updateVisited(); selectPlace(places[0], false, false); setHeroMode("reveal"); applyOverlayTransform(); updateAlignmentUI(); if (!localStorage.getItem("gusu-onboarding-complete")) setTimeout(openOnboarding, 450);
+buildStories(); loadDesktopImages(); buildRouteStops(); initMap(); updateVisited(); selectPlace(places[0], false, false); setHeroMode("reveal"); applyOverlayTransform(); updateAlignmentUI(); if (!localStorage.getItem("gusu-onboarding-complete")) setTimeout(openOnboarding, 450);
 
 
 

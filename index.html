@@ -7,10 +7,9 @@
   <meta name="description" content="Match archival photographs with the streets of Suzhou today — remotely or as a photographic city walk." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23a54b38'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-size='38' fill='white'%3EG%3C/text%3E%3C/svg%3E" />
   <title>Gusu, Past &amp; Present</title>
-  <link rel="preconnect" href="https://unpkg.com" />
   <link rel="preconnect" href="https://tiles.openfreemap.org" />
-  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.10.0/dist/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=11" />
+  <link rel="stylesheet" href="vendor/maplibre-gl.css" />
+  <link rel="stylesheet" href="style.css?v=13" />
 </head>
 <body>
   <header class="site-header">
@@ -51,8 +50,8 @@
             </div>
           </div>
           <div id="hero-stage" class="demo-stage compare-component" data-mode="reveal">
-            <img class="compare-base" src="images/20003B-观前街-1930年代-苏州通史-2024.jpg" alt="Guanqian Street in 2024" />
-            <div id="hero-old-wrap" class="compare-old-wrap"><img src="images/20003A-观前街-1930年代-苏州通史.jpg" alt="Archival view of Guanqian Street in the 1930s" /></div>
+            <img class="compare-base" data-desktop-src="images/optimized/20003B-观前街-1930年代-苏州通史-2024.webp" decoding="async" alt="Guanqian Street in 2024" />
+            <div id="hero-old-wrap" class="compare-old-wrap"><img data-desktop-src="images/optimized/20003A-观前街-1930年代-苏州通史.webp" decoding="async" alt="Archival view of Guanqian Street in the 1930s" /></div>
             <div id="hero-handle" class="compare-handle"><span>↔</span></div>
             <div id="hero-lens-outline" class="lens-outline" aria-hidden="true"></div>
             <span class="image-label label-past">ARCHIVE</span><span class="image-label label-now">TODAY</span>
@@ -291,8 +290,8 @@
     </div>
   </aside>
   <footer><span>GUSU HISTORIC PHOTOGRAPH FIELD PROJECT</span><span>Modern rephotographs: © 古城阳面 · For HER Lab teaching and student graduation work only.</span></footer>
-  <script src="https://unpkg.com/maplibre-gl@5.10.0/dist/maplibre-gl.js"></script>
-  <script src="app.js?v=11"></script>
+  <script src="vendor/maplibre-gl.js"></script>
+  <script src="app.js?v=13"></script>
 </body>
 </html>
 
