@@ -9,7 +9,7 @@
   <title>Gusu, Past &amp; Present</title>
   <link rel="preconnect" href="https://tiles.openfreemap.org" />
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=13" />
+  <link rel="stylesheet" href="style.css?v=14" />
 </head>
 <body>
   <header class="site-header">
@@ -135,7 +135,7 @@
         <div id="proximity-status" class="proximity-status"><span></span><b>Location optional</b></div>
       </div>
       <div class="field-layout">
-        <div>
+        <div class="camera-column">
           <div class="camera-container">
             <video id="camera" autoplay muted playsinline></video>
             <div id="camera-placeholder" class="camera-placeholder"><span>◎</span><strong>Opening the camera</strong><p>Allow access to your rear camera</p></div>
@@ -146,11 +146,7 @@
             <div class="camera-guide">Match the strongest roofline and road edge first</div><div id="camera-credit" class="camera-credit"></div>
           </div>
           <div id="camera-error" class="camera-error hidden" role="alert"><strong>Camera unavailable</strong><p id="camera-error-text"></p></div>
-        </div>
-        <aside class="field-notes">
-          <p class="eyebrow">FIELD NOTES</p><h2>Three anchors to match</h2>
-          <ul id="anchor-list"></ul>
-          <div class="control-panel">
+          <div class="control-panel" aria-label="Ghost photograph controls">
             <div class="control-title"><label for="opacity-slider">Archival overlay</label><output id="opacity-value">50%</output></div>
             <input id="opacity-slider" type="range" min="0" max="1" step="0.01" value="0.5" />
             <div class="opacity-labels"><span>Present</span><span>Past</span></div>
@@ -158,13 +154,24 @@
             <input id="zoom-slider" type="range" min="50" max="220" step="1" value="100" />
             <div class="control-title second-control"><label for="rotation-slider">Fine rotation</label><output id="rotation-value">0°</output></div>
             <input id="rotation-slider" type="range" min="-20" max="20" step="0.5" value="0" />
+            <div class="control-title second-control"><span>Fine position</span><output id="position-value">Centred</output></div>
+            <div class="ghost-nudge-grid" aria-label="Fine position controls">
+              <button type="button" data-ghost-nudge="0,-6" aria-label="Move ghost up">↑</button>
+              <button type="button" data-ghost-nudge="-6,0" aria-label="Move ghost left">←</button>
+              <button type="button" data-ghost-nudge="6,0" aria-label="Move ghost right">→</button>
+              <button type="button" data-ghost-nudge="0,6" aria-label="Move ghost down">↓</button>
+            </div>
             <div class="ghost-tools">
               <button id="fit-btn" type="button">Contain</button>
               <button id="lock-btn" type="button">Lock ghost</button>
               <button id="reset-overlay-btn" type="button">Reset</button>
             </div>
-            <p class="gesture-note">Drag the ghost over the live view. Pinch on mobile, or use the size and rotation controls.</p>
+            <p class="gesture-note">Drag directly on the camera view. Pinch with two fingers, or use these controls for precise adjustment.</p>
           </div>
+        </div>
+        <aside class="field-notes">
+          <p class="eyebrow">FIELD NOTES</p><h2>Three anchors to match</h2>
+          <ul id="anchor-list"></ul>
         </aside>
       </div>
       <div class="camera-actions">
@@ -291,7 +298,7 @@
   </aside>
   <footer><span>GUSU HISTORIC PHOTOGRAPH FIELD PROJECT</span><span>Modern rephotographs: © 古城阳面 · For HER Lab teaching and student graduation work only.</span></footer>
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="app.js?v=13"></script>
+  <script src="app.js?v=14"></script>
 </body>
 </html>
 
