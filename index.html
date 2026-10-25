@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -9,7 +9,7 @@
   <title>Gusu, Past &amp; Present</title>
   <link rel="preconnect" href="https://tiles.openfreemap.org" />
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=14" />
+  <link rel="stylesheet" href="style.css?v=15" />
 </head>
 <body>
   <header class="site-header">
@@ -28,12 +28,12 @@
     <section id="home-page" class="page">
       <section class="hero-section" aria-labelledby="hero-title">
         <div class="hero-copy-wrap">
-          <p class="eyebrow">SUZHOU · ONE FRAME · TWO MOMENTS</p>
-          <h1 id="hero-title">Stand in the same place, decades later.</h1>
-          <p class="hero-copy">Match archival photographs with the streets of Gusu today. Explore from anywhere, or follow the route and make your own then-and-now image.</p>
-          <div class="hero-actions">
-            <button id="try-demo-btn" class="primary-btn" type="button">Try the comparison <span>→</span></button>
-            <a class="secondary-btn" href="#route">Start the city walk</a>
+          <p class="eyebrow">姑苏 · 一处地点 · 两段时光</p>
+          <h1 id="hero-title">从哪里开始认识姑苏？</h1>
+          <p class="hero-copy">在线翻阅城市的旧影与今天，或走进古城，在历史发生的地方完成一次古今合影打卡。</p>
+          <div class="hero-actions journey-entries" aria-label="选择体验方式">
+            <button id="try-demo-btn" class="journey-entry journey-entry-online" type="button"><span class="journey-entry-icon" aria-hidden="true">◎</span><span><strong>线上探索姑苏</strong><small>看新老对照与城市故事</small></span><b aria-hidden="true">→</b></button>
+            <a class="journey-entry journey-entry-walk" href="#route"><span class="journey-entry-icon" aria-hidden="true">⌖</span><span><strong>开启城市漫步</strong><small>选地点，到现场古今合影</small></span><b aria-hidden="true">→</b></a>
           </div>
           <div class="trust-row" aria-label="Experience details">
             <span><i>20</i> documented viewpoints</span><span><i>⌖</i> optional location</span><span><i>○</i> photos stay on device</span>
@@ -86,7 +86,7 @@
         <ol class="how-steps">
           <li><span>01</span><div><strong>Choose a story</strong><p>Preview the transformation remotely before deciding whether to walk there.</p></div></li>
           <li><span>02</span><div><strong>Find the viewpoint</strong><p>Use the map, bilingual place name and visual framing notes to locate the original angle.</p></div></li>
-          <li><span>03</span><div><strong>Make a new record</strong><p>Align the archival image, take your photograph and download a personal comparison postcard.</p></div></li>
+          <li><span>03</span><div><strong>完成古今合影打卡</strong><p>让自己进入画面，与历史照片同框，并下载一张专属姑苏纪念卡。</p></div></li>
         </ol>
       </section>
 
@@ -119,8 +119,8 @@
             </div>
             <div class="place-actions">
               <button id="save-place-btn" class="save-place-btn" type="button" aria-pressed="false">♡ Save to route</button>
-              <button id="remote-btn" class="secondary-btn" type="button">Explore from home</button>
-              <button id="start-btn" class="primary-btn" type="button">Capture on site <span>→</span></button>
+              <button id="remote-btn" class="secondary-btn" type="button">线上看古今</button>
+              <button id="start-btn" class="primary-btn" type="button">古今合影打卡 <span>→</span></button>
             </div>
             <a id="nav-link" class="nav-link" href="#" target="_blank" rel="noreferrer">Open walking directions in Amap ↗</a>
           </div>
@@ -129,25 +129,25 @@
     </section>
 
     <section id="camera-page" class="page hidden" aria-labelledby="camera-title">
-      <button id="back-home-btn" class="text-back" type="button">← Back to the story</button>
+      <button id="back-home-btn" class="text-back" type="button">← 返回地点故事</button>
       <div class="camera-heading">
-        <div><p id="camera-step" class="eyebrow">ON-SITE COMPARISON</p><h1 id="camera-title">Find the original frame.</h1><p id="camera-place-name"></p></div>
+        <div><p id="camera-step" class="eyebrow">古今合影打卡</p><h1 id="camera-title">让你与过去同框。</h1><p id="camera-place-name"></p></div>
         <div id="proximity-status" class="proximity-status"><span></span><b>Location optional</b></div>
       </div>
       <div class="field-layout">
         <div class="camera-column">
           <div class="camera-container">
             <video id="camera" autoplay muted playsinline></video>
-            <div id="camera-placeholder" class="camera-placeholder"><span>◎</span><strong>Opening the camera</strong><p>Allow access to your rear camera</p></div>
+            <div id="camera-placeholder" class="camera-placeholder"><span>◎</span><strong>正在打开相机</strong><p>允许相机权限，让自己进入古今画面</p></div>
             <img id="overlay-photo" alt="Archival photograph used for alignment" />
             <div class="camera-grid" aria-hidden="true"></div>
             <div class="frame-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-            <div id="ghost-mode-label" class="ghost-mode-label">GHOST UNLOCKED · DRAG TO POSITION</div>
-            <div class="camera-guide">Match the strongest roofline and road edge first</div><div id="camera-credit" class="camera-credit"></div>
+            <div id="ghost-mode-label" class="ghost-mode-label">旧影可移动 · 拖动调整位置</div>
+            <div class="camera-guide">把自己放进画面，再调整旧照片的位置与透明度</div><div id="camera-credit" class="camera-credit"></div>
           </div>
           <div id="camera-error" class="camera-error hidden" role="alert"><strong>Camera unavailable</strong><p id="camera-error-text"></p></div>
           <div class="control-panel" aria-label="Ghost photograph controls">
-            <div class="control-title"><label for="opacity-slider">Archival overlay</label><output id="opacity-value">50%</output></div>
+            <div class="control-title"><label for="opacity-slider">历史照片透明度</label><output id="opacity-value">35%</output></div>
             <input id="opacity-slider" type="range" min="0" max="1" step="0.01" value="0.5" />
             <div class="opacity-labels"><span>Present</span><span>Past</span></div>
             <div class="control-title second-control"><label for="zoom-slider">Ghost size</label><output id="zoom-value">100%</output></div>
@@ -166,20 +166,20 @@
               <button id="lock-btn" type="button">Lock ghost</button>
               <button id="reset-overlay-btn" type="button">Reset</button>
             </div>
-            <p class="gesture-note">Drag directly on the camera view. Pinch with two fingers, or use these controls for precise adjustment.</p>
+            <p class="gesture-note">拖动旧照片与现场对齐；双指缩放，或使用尺寸和旋转滑杆。人物不必完全遮挡，让古今两层都能被看见。</p>
           </div>
         </div>
         <aside class="field-notes">
-          <p class="eyebrow">FIELD NOTES</p><h2>Three anchors to match</h2>
+          <p class="eyebrow">合影提示</p><h2>找到古今相接的位置</h2>
           <ul id="anchor-list"></ul>
         </aside>
       </div>
       <div class="camera-actions">
-        <label for="upload-input" class="secondary-btn">Choose a photo</label><input id="upload-input" class="visually-hidden" type="file" accept="image/*" capture="environment" />
+        <label for="upload-input" class="secondary-btn">选择已有照片</label><input id="upload-input" class="visually-hidden" type="file" accept="image/*" />
         <button id="capture-btn" class="shutter-btn" type="button" aria-label="Take a photograph"><span></span></button>
-        <button id="reference-btn" class="secondary-btn" type="button">View archive</button>
+        <button id="reference-btn" class="secondary-btn" type="button">切换到后置镜头</button>
       </div>
-      <p class="privacy-note">Your photograph is processed on this device and is never uploaded.</p>
+      <p class="privacy-note">照片只在你的设备中处理，不会上传。</p>
     </section>
 
     <canvas id="canvas" class="hidden"></canvas>
@@ -238,7 +238,7 @@
 
     <section id="preview-page" class="page hidden" aria-labelledby="preview-title">
       <button id="preview-back-btn" class="text-back" type="button">← Back</button>
-      <div class="preview-heading"><p class="eyebrow">YOUR COMPARISON</p><h1 id="preview-title">One corner, two moments.</h1><p id="preview-place-name"></p></div>
+      <div class="preview-heading"><p class="eyebrow">你的古今合影</p><h1 id="preview-title">我在姑苏，遇见过去。</h1><p id="preview-place-name"></p></div>
       <div id="compare-studio" class="compare-studio">
         <div class="compare-toolbar">
           <div class="mode-switcher" role="group" aria-label="Comparison mode">
@@ -270,8 +270,8 @@
       </div>
       <div class="preview-actions">
         <button id="retake-btn" class="secondary-btn" type="button">Use another photo</button>
-        <button id="download-btn" class="primary-btn" type="button">Download postcard ↓</button>
-        <button id="finish-btn" class="text-btn" type="button">Complete visit</button>
+        <button id="download-btn" class="primary-btn" type="button">下载古今纪念卡 ↓</button>
+        <button id="finish-btn" class="text-btn" type="button">完成打卡</button>
       </div>
     </section>
   </main>
@@ -298,7 +298,7 @@
   </aside>
   <footer><span>GUSU HISTORIC PHOTOGRAPH FIELD PROJECT</span><span>Modern rephotographs: © 古城阳面 · For HER Lab teaching and student graduation work only.</span></footer>
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="app.js?v=14"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>
 

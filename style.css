@@ -83,6 +83,31 @@ main{width:min(1180px,calc(100% - 48px));margin:0 auto}.hero-section{min-height:
 
 .map-key>span{width:auto;height:auto;margin:0;border-radius:0;background:none}
 
+/* Two clear homepage journeys */
+.journey-entries{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:640px}
+.journey-entry{min-height:108px;display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:14px;padding:18px;border:1px solid var(--line);border-radius:16px;color:var(--ink);background:#faf8f2;text-align:left;text-decoration:none;cursor:pointer;box-shadow:0 12px 32px rgba(31,45,39,.08);transition:transform .2s,box-shadow .2s,border-color .2s}
+.journey-entry:hover{transform:translateY(-3px);border-color:#a54b3866;box-shadow:0 18px 42px rgba(31,45,39,.14)}
+.journey-entry-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:50%;color:#fff;background:var(--red);font-size:20px}
+.journey-entry>span:nth-child(2){min-width:0;display:block}
+.journey-entry strong,.journey-entry small{display:block}
+.journey-entry strong{font:700 20px/1.15 var(--serif)}
+.journey-entry small{margin-top:6px;color:var(--muted);font-size:10px;line-height:1.45}
+.journey-entry>b{color:var(--red);font-size:18px}
+.journey-entry-walk{color:#fff;background:var(--green);border-color:var(--green)}
+.journey-entry-walk .journey-entry-icon{color:var(--green);background:#f2efe7}
+.journey-entry-walk small{color:#ffffffa8}.journey-entry-walk>b{color:#fff}
+#camera.is-selfie{transform:scaleX(-1)}
+
+@media(max-width:680px){
+  #home-page>.hero-section{display:grid;min-height:calc(100dvh - 66px);padding:42px 18px 52px;background:var(--paper)}
+  #home-page>.hero-section .hero-demo{display:none}
+  #home-page>.stories-section{display:block;padding-left:18px;padding-right:18px}
+  .journey-entries{grid-template-columns:1fr}
+  .journey-entry{min-height:94px}
+  .route-section{height:auto;min-height:calc(100dvh - 66px)}
+  .route-section:target{height:calc(100dvh - 66px)}
+}
+
 
 @media(max-width:680px){.route-intro>div:first-child{min-width:0}.route-tools{flex:none}}
 
