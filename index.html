@@ -9,7 +9,7 @@
   <title>Gusu, Past &amp; Present</title>
   <link rel="preconnect" href="https://tiles.openfreemap.org" />
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=15" />
+  <link rel="stylesheet" href="style.css?v=16" />
 </head>
 <body>
   <header class="site-header">
@@ -243,6 +243,14 @@
       <button id="preview-back-btn" class="text-back" type="button">← Back</button>
       <div class="preview-heading"><p class="eyebrow">你的古今合影</p><h1 id="preview-title">我在姑苏，遇见过去。</h1><p id="preview-place-name"></p></div>
       <div id="layer-stack-note" class="layer-stack-note hidden" aria-label="古今合影图层"><span>底层 · 当代街景</span><i>＋</i><span>中层 · 历史旧影</span><i>＋</i><span>顶层 · 你的身影</span></div>
+      <section id="checkin-template-picker" class="checkin-template-picker hidden" aria-labelledby="checkin-template-title">
+        <div><p class="eyebrow">选择古今构图</p><h2 id="checkin-template-title">让历史成为合影背景，而不是一层淡滤镜。</h2></div>
+        <div class="checkin-template-options" role="group" aria-label="古今合影构图">
+          <button class="is-active" data-checkin-template="split" type="button"><b>推荐</b><strong>古今分镜</strong><small>过去与现在各占一侧，人物跨越两个时代</small></button>
+          <button data-checkin-template="overlay" type="button"><strong>时光叠影</strong><small>历史旧影与现场街景对齐融合</small></button>
+          <button data-checkin-template="frame" type="button"><strong>历史相框</strong><small>把旧照片作为清晰的历史窗口放在身后</small></button>
+        </div>
+      </section>
       <div id="compare-studio" class="compare-studio">
         <div class="compare-toolbar">
           <div class="mode-switcher" role="group" aria-label="Comparison mode">
@@ -302,7 +310,7 @@
   </aside>
   <footer><span>GUSU HISTORIC PHOTOGRAPH FIELD PROJECT</span><span>Modern rephotographs: © 古城阳面 · For HER Lab teaching and student graduation work only.</span></footer>
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="app.js?v=15"></script>
+  <script src="app.js?v=16"></script>
 </body>
 </html>
 

@@ -49,7 +49,7 @@ const el = {
   storyGrid: $("story-grid"), routeStops: $("route-stops"), placeCard: $("place-card"), oldPhoto: $("old-photo"), nowPhoto: $("now-photo"), placeIndex: $("place-index"), placeName: $("place-name"), placeCn: $("place-cn"), placeDesc: $("place-desc"), changeFocus: $("change-focus"), shotTip: $("shot-tip"), distanceBadge: $("distance-badge"), navLink: $("nav-link"), remoteBtn: $("remote-btn"), startBtn: $("start-btn"), locateBtn: $("locate-btn"), locationToast: $("location-toast"), tryDemoBtn: $("try-demo-btn"), heroSlider: $("hero-slider"), heroOldWrap: $("hero-old-wrap"), heroHandle: $("hero-handle"), themeOptions: $("theme-options"), walkOptions: $("walk-options"), walkDetail: $("walk-detail"), activeExploreLabel: $("active-explore-label"),
   camera: $("camera"), cameraContainer: document.querySelector(".camera-container"), overlayPhoto: $("overlay-photo"), cameraPlaceholder: $("camera-placeholder"), cameraError: $("camera-error"), cameraErrorText: $("camera-error-text"), opacitySlider: $("opacity-slider"), opacityValue: $("opacity-value"), zoomSlider: $("zoom-slider"), zoomValue: $("zoom-value"), rotationSlider: $("rotation-slider"), rotationValue: $("rotation-value"), fitBtn: $("fit-btn"), lockBtn: $("lock-btn"), resetOverlayBtn: $("reset-overlay-btn"), ghostModeLabel: $("ghost-mode-label"), segmentationStatus: $("segmentation-status"), captureBtn: $("capture-btn"), uploadInput: $("upload-input"), referenceBtn: $("reference-btn"), backHomeBtn: $("back-home-btn"), canvas: $("canvas"), cameraStep: $("camera-step"), cameraPlaceName: $("camera-place-name"), proximityStatus: $("proximity-status"), anchorList: $("anchor-list"),
   alignBackBtn: $("align-back-btn"), alignPlaceName: $("align-place-name"), pairCount: $("pair-count"), alignStepNumber: $("align-step-number"), alignInstructionTitle: $("align-instruction-title"), alignInstructionCopy: $("align-instruction-copy"), oldPointStage: $("old-point-stage"), newPointStage: $("new-point-stage"), alignOld: $("align-old"), alignNew: $("align-new"), oldPointLayer: $("old-point-layer"), newPointLayer: $("new-point-layer"), undoPointBtn: $("undo-point-btn"), clearPointsBtn: $("clear-points-btn"), alignmentReview: $("alignment-review"), reviewTitle: $("review-title"), alignmentQuality: $("alignment-quality"), alignPreviewNew: $("align-preview-new"), warpCanvas: $("warp-canvas"), alignOpacitySlider: $("align-opacity-slider"), alignOpacityValue: $("align-opacity-value"), skipAlignBtn: $("skip-align-btn"), confirmAlignBtn: $("confirm-align-btn"),
-  previewOld: $("preview-old"), previewNew: $("preview-new"), previewPlaceName: $("preview-place-name"), previewBackBtn: $("preview-back-btn"), retakeBtn: $("retake-btn"), downloadBtn: $("download-btn"), finishBtn: $("finish-btn"), layerStackNote: $("layer-stack-note"), compareSlider: $("compare-slider"), compareOldWrap: $("compare-old-wrap"), compareHandle: $("compare-handle"), resultInsight: $("result-insight"), resultDetail: $("result-detail"), visitedCount: $("visited-count"), savedCount: $("saved-count"), savePlaceBtn: $("save-place-btn"), visitProof: $("visit-proof"), visitPhoto: $("visit-photo"), visitDate: $("visit-date"), collectionDrawer: $("collection-drawer"), collectionList: $("collection-list")
+  previewOld: $("preview-old"), previewNew: $("preview-new"), previewPlaceName: $("preview-place-name"), previewBackBtn: $("preview-back-btn"), retakeBtn: $("retake-btn"), downloadBtn: $("download-btn"), finishBtn: $("finish-btn"), layerStackNote: $("layer-stack-note"), checkinTemplatePicker: $("checkin-template-picker"), compareStudio: $("compare-studio"), compareHint: $("compare-hint"), compareSlider: $("compare-slider"), compareOldWrap: $("compare-old-wrap"), compareHandle: $("compare-handle"), resultInsight: $("result-insight"), resultDetail: $("result-detail"), visitedCount: $("visited-count"), savedCount: $("saved-count"), savePlaceBtn: $("save-place-btn"), visitProof: $("visit-proof"), visitPhoto: $("visit-photo"), visitDate: $("visit-date"), collectionDrawer: $("collection-drawer"), collectionList: $("collection-list")
 };
 
 let selectedPlace = places[0], cameraStream = null, userPosition = null, userMarker = null, referenceOnly = false, remoteMode = false, map = null, fieldImageSrc = "";
@@ -92,6 +92,9 @@ let cameraFacingMode = "user";
 let selfieSegmenterPromise = null;
 let segmentationResolve = null;
 let segmentationReject = null;
+let isLayeredCheckin = false;
+let activeCheckinTemplate = "split";
+let layeredCheckinAssets = null;
 
 function formatVisitDate(value) { return new Date(value).toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" }); }
 function persistSavedPlaces() { localStorage.setItem("gusu-saved-route", JSON.stringify([...savedPlaces])); }
@@ -398,9 +401,24 @@ function handleOverlayPointerDown(event) { if (overlayState.locked) return; el.c
 function handleOverlayPointerMove(event) { if (!activePointers.has(event.pointerId) || overlayState.locked) return; const point = activePointers.get(event.pointerId); point.x = event.clientX; point.y = event.clientY; if (activePointers.size === 1) { overlayState.x += point.x - point.lastX; overlayState.y += point.y - point.lastY; } else if (activePointers.size === 2 && pinchStart) { const points = [...activePointers.values()], center = pointerCenter(points); overlayState.scale = Math.min(2.2, Math.max(.5, pinchStart.scale * pointerDistance(points) / Math.max(1, pinchStart.distance))); overlayState.rotation = Math.min(20, Math.max(-20, pinchStart.rotation + pointerAngle(points) - pinchStart.angle)); overlayState.x = pinchStart.x + center.x - pinchStart.center.x; overlayState.y = pinchStart.y + center.y - pinchStart.center.y; } point.lastX = point.x; point.lastY = point.y; applyOverlayTransform(); }
 function handleOverlayPointerEnd(event) { activePointers.delete(event.pointerId); pinchStart = null; if (!activePointers.size) el.cameraContainer.classList.remove("is-dragging"); if (activePointers.size === 1) { const point = [...activePointers.values()][0]; point.lastX = point.x; point.lastY = point.y; } }
 
-function prepareResult(place, newImage, isRemote, alignedOld = place.oldPhoto, isLayered = false) { selectedPlace = place; remoteMode = isRemote; const currentCredit = isRemote ? place.nowCredit : fieldCredit(); el.previewOld.src = alignedOld; el.previewNew.src = newImage; el.previewPlaceName.textContent = `${place.name} · ${place.cn}`; el.resultInsight.textContent = place.insight; el.resultDetail.textContent = place.detail; el.layerStackNote.classList.toggle("hidden", !isLayered); $("preview-title").textContent = isRemote ? "一处地点，两段时光。" : (isLayered ? "三层古今合影完成。" : "我在姑苏，遇见过去。"); el.downloadBtn.textContent = isRemote ? "下载对比明信片 ↓" : "下载古今纪念卡 ↓"; $("preview-old-credit").textContent = place.oldCredit; $("preview-new-credit").textContent = currentCredit; $("compare-old-year").textContent = place.oldCredit.split("·")[0].trim(); $("compare-new-year").textContent = currentCredit.split("·")[0].trim(); $("source-note").textContent = `Archive: ${place.oldCredit}. Present: ${currentCredit}. Supplied modern rephotographs © 古城阳面; HER Lab teaching and student graduation work only.`; el.compareSlider.value = 50; setCompareMode("reveal"); el.retakeBtn.textContent = isRemote ? "选择另一个故事" : "重新拍摄"; el.finishBtn.textContent = isRemote ? (savedPlaces.has(place.id) ? "♥ 已加入路线" : "♡ 加入漫步路线") : "完成打卡并收集印章"; stopCamera(); showPage("preview"); }
+function prepareResult(place, newImage, isRemote, alignedOld = place.oldPhoto, isLayered = false) {
+  selectedPlace = place; remoteMode = isRemote; isLayeredCheckin = isLayered;
+  const currentCredit = isRemote ? place.nowCredit : fieldCredit();
+  el.previewOld.src = alignedOld; el.previewNew.src = newImage; el.previewPlaceName.textContent = `${place.name} · ${place.cn}`;
+  el.resultInsight.textContent = place.insight; el.resultDetail.textContent = place.detail;
+  el.layerStackNote.classList.toggle("hidden", !isLayered); el.checkinTemplatePicker.classList.toggle("hidden", !isLayered); el.compareStudio.classList.toggle("is-checkin", isLayered);
+  $("preview-title").textContent = isRemote ? "一处地点，两段时光。" : (isLayered ? "我与姑苏的过去同框。" : "我在姑苏，遇见过去。");
+  el.downloadBtn.textContent = isRemote ? "下载对比明信片 ↓" : "下载古今纪念卡 ↓";
+  $("preview-old-credit").textContent = place.oldCredit; $("preview-new-credit").textContent = currentCredit;
+  $("compare-old-year").textContent = place.oldCredit.split("·")[0].trim(); $("compare-new-year").textContent = currentCredit.split("·")[0].trim();
+  $("source-note").textContent = isLayered ? `历史背景：${place.oldCredit}。现场照片与人物抠图均只在你的设备中处理。` : `Archive: ${place.oldCredit}. Present: ${currentCredit}. Supplied modern rephotographs © 古城阳面; HER Lab teaching and student graduation work only.`;
+  el.compareSlider.value = 50; setCompareMode("reveal");
+  el.compareHint.textContent = isLayered ? "选择一种构图，让你站在过去与现在之间。" : "Drag across the image to reveal what changed — and what remained.";
+  el.retakeBtn.textContent = isRemote ? "选择另一个故事" : "重新拍摄"; el.finishBtn.textContent = isRemote ? (savedPlaces.has(place.id) ? "♥ 已加入路线" : "♡ 加入漫步路线") : "完成打卡并收集印章";
+  stopCamera(); showPage("preview");
+}
 function openRemote(place) { prepareResult(place, place.nowPhoto, true, place.oldPhoto); }
-async function startField() { remoteMode = false; fieldImageSrc = ""; cameraFacingMode = "user"; el.cameraStep.textContent = `点位 ${formatIndex(places.indexOf(selectedPlace))} · 古今合影打卡`; el.cameraPlaceName.textContent = `${selectedPlace.name} · ${selectedPlace.cn}`; el.overlayPhoto.src = selectedPlace.oldPhoto; $("camera-credit").textContent = selectedPlace.oldCredit; el.anchorList.innerHTML = selectedPlace.anchors.map((anchor, index) => `<li><b>${index + 1}</b> ${anchor}</li>`).join(""); el.opacitySlider.value = .35; referenceOnly = false; el.referenceBtn.textContent = "切换到后置镜头"; resetOverlay(); setOpacity(.35); updateDistance(); showPage("camera"); await startCamera(); }
+async function startField() { remoteMode = false; isLayeredCheckin = false; layeredCheckinAssets = null; fieldImageSrc = ""; cameraFacingMode = "user"; el.cameraStep.textContent = `点位 ${formatIndex(places.indexOf(selectedPlace))} · 古今合影打卡`; el.cameraPlaceName.textContent = `${selectedPlace.name} · ${selectedPlace.cn}`; el.overlayPhoto.src = selectedPlace.oldPhoto; $("camera-credit").textContent = selectedPlace.oldCredit; el.anchorList.innerHTML = selectedPlace.anchors.map((anchor, index) => `<li><b>${index + 1}</b> ${anchor}</li>`).join(""); el.opacitySlider.value = .58; referenceOnly = false; el.referenceBtn.textContent = "切换到后置镜头"; resetOverlay(); setOpacity(.58); updateDistance(); showPage("camera"); await startCamera(); }
 async function startCamera() { stopCamera(); el.camera.classList.toggle("is-selfie", cameraFacingMode === "user"); el.cameraError.classList.add("hidden"); el.cameraPlaceholder.classList.remove("hidden"); el.cameraPlaceholder.querySelector("strong").textContent = "正在打开相机"; el.cameraPlaceholder.querySelector("p").textContent = cameraFacingMode === "user" ? "把自己和街景一起放进画面" : "对准旧照片中的街景位置"; if (!navigator.mediaDevices?.getUserMedia) { showCameraError("当前浏览器无法直接使用相机，请从相册选择一张照片继续。"); return; } try { cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: cameraFacingMode }, width: { ideal: 1920 }, height: { ideal: 1280 } }, audio: false }); el.camera.srcObject = cameraStream; await el.camera.play(); el.cameraPlaceholder.classList.add("hidden"); } catch (error) { showCameraError(error.name === "NotAllowedError" ? "相机权限尚未开启，请在浏览器设置中允许，或从相册选择照片。" : "无法打开相机，请从相册选择照片继续。"); } }
 function showCameraError(message) { el.cameraErrorText.textContent = message; el.cameraError.classList.remove("hidden"); el.cameraPlaceholder.querySelector("strong").textContent = "Continue with a photo"; el.cameraPlaceholder.querySelector("p").textContent = "Your image never leaves this device"; }
 function stopCamera() { cameraStream?.getTracks().forEach(track => track.stop()); cameraStream = null; el.camera.srcObject = null; }
@@ -439,31 +457,66 @@ async function extractPersonCutout(sourceCanvas) {
   context.globalCompositeOperation = "source-over";
   return cutout.toDataURL("image/png");
 }
-async function composeThreeLayers(personCutoutSrc) {
-  const [presentImage, archiveImage, personImage] = await Promise.all([loadImage(selectedPlace.nowPhoto), loadImage(selectedPlace.oldPhoto), loadImage(personCutoutSrc)]);
-  const composite = document.createElement("canvas"), context = composite.getContext("2d");
-  composite.width = 1200; composite.height = 900;
-  drawCover(context, presentImage, 0, 0, composite.width, composite.height);
-  const cameraRect = el.cameraContainer.getBoundingClientRect(), offsetScaleX = composite.width / Math.max(1, cameraRect.width), offsetScaleY = composite.height / Math.max(1, cameraRect.height);
-  context.save(); context.globalAlpha = Number(el.opacitySlider.value); context.globalCompositeOperation = "multiply"; context.translate(composite.width / 2 + overlayState.x * offsetScaleX, composite.height / 2 + overlayState.y * offsetScaleY); context.rotate(overlayState.rotation * Math.PI / 180); context.scale(overlayState.scale, overlayState.scale); drawCover(context, archiveImage, -composite.width / 2, -composite.height / 2, composite.width, composite.height); context.restore();
-  context.save(); context.fillStyle = "rgba(242,239,231,.10)"; context.fillRect(0,0,composite.width,composite.height); context.restore();
-  drawCover(context, personImage, 0, 0, composite.width, composite.height);
-  const vignette = context.createLinearGradient(0, 610, 0, 900); vignette.addColorStop(0,"rgba(11,24,19,0)"); vignette.addColorStop(1,"rgba(11,24,19,.48)"); context.fillStyle = vignette; context.fillRect(0,560,1200,340);
-  context.fillStyle = "rgba(255,255,255,.92)"; context.font = "700 18px Microsoft YaHei, Arial"; context.fillText("古今合影打卡", 38, 832);
-  context.font = "700 34px Microsoft YaHei, Georgia"; context.fillText(selectedPlace.cn, 38, 873);
-  context.textAlign = "right"; context.font = "700 15px Arial"; context.fillText("GUSU · PAST & PRESENT", 1162, 848); context.font = "15px Microsoft YaHei, Arial"; context.fillText(`${selectedPlace.oldCredit.split("·")[0].trim()} × ${new Date().getFullYear()}`, 1162, 875); context.textAlign = "left";
+function drawAlignedArchive(context, archiveImage, width, height, alpha = 1, clip = null) {
+  const cameraRect = el.cameraContainer.getBoundingClientRect(), offsetScaleX = width / Math.max(1, cameraRect.width), offsetScaleY = height / Math.max(1, cameraRect.height);
+  context.save();
+  if (clip) { context.beginPath(); context.rect(clip.x, clip.y, clip.width, clip.height); context.clip(); }
+  context.globalAlpha = alpha; context.filter = "grayscale(.18) sepia(.28) contrast(1.08)";
+  context.translate(width / 2 + overlayState.x * offsetScaleX, height / 2 + overlayState.y * offsetScaleY);
+  context.rotate(overlayState.rotation * Math.PI / 180); context.scale(overlayState.scale, overlayState.scale);
+  drawCover(context, archiveImage, -width / 2, -height / 2, width, height);
+  context.restore();
+}
+function drawCheckinFrame(context, width, height) {
+  context.save(); context.strokeStyle = "#f2efe7"; context.lineWidth = 24; context.strokeRect(12, 12, width - 24, height - 24); context.strokeStyle = "rgba(165,75,56,.75)"; context.lineWidth = 2; context.strokeRect(29, 29, width - 58, height - 58); context.restore();
+  const vignette = context.createLinearGradient(0, height * .62, 0, height); vignette.addColorStop(0,"rgba(11,24,19,0)"); vignette.addColorStop(1,"rgba(11,24,19,.66)"); context.fillStyle = vignette; context.fillRect(24,height * .56,width - 48,height * .42);
+  context.fillStyle = "rgba(255,255,255,.95)"; context.font = "700 17px Microsoft YaHei, Arial"; context.fillText("我在姑苏，与过去同框", 48, height - 72);
+  context.font = "700 32px Microsoft YaHei, Georgia"; context.fillText(selectedPlace.cn, 48, height - 35);
+  context.textAlign = "right"; context.font = "700 14px Arial"; context.fillText("GUSU · PAST & PRESENT", width - 48, height - 67); context.font = "15px Microsoft YaHei, Arial"; context.fillText(`${selectedPlace.oldCredit.split("·")[0].trim()} × ${new Date().getFullYear()}`, width - 48, height - 36); context.textAlign = "left";
+}
+async function composeThreeLayers(personCutoutSrc, presentSource, template = activeCheckinTemplate) {
+  const [presentImage, archiveImage, personImage] = await Promise.all([loadImage(presentSource), loadImage(selectedPlace.oldPhoto), loadImage(personCutoutSrc)]);
+  const composite = document.createElement("canvas"), context = composite.getContext("2d"), width = 1200, height = 900;
+  composite.width = width; composite.height = height;
+  drawCover(context, presentImage, 0, 0, width, height);
+  if (template === "split") {
+    const splitX = Math.round(width * .54);
+    drawAlignedArchive(context, archiveImage, width, height, 1, { x:0, y:0, width:splitX, height });
+    const seam = context.createLinearGradient(splitX - 34, 0, splitX + 34, 0); seam.addColorStop(0,"rgba(242,239,231,0)"); seam.addColorStop(.48,"rgba(242,239,231,.95)"); seam.addColorStop(.52,"rgba(242,239,231,.95)"); seam.addColorStop(1,"rgba(242,239,231,0)"); context.fillStyle = seam; context.fillRect(splitX - 34, 24, 68, height - 48);
+    context.fillStyle = "rgba(19,37,31,.82)"; context.font = "700 13px Microsoft YaHei, Arial"; context.fillText(`过去 · ${selectedPlace.oldCredit.split("·")[0].trim()}`, 48, 64); context.textAlign = "right"; context.fillText(`现在 · ${new Date().getFullYear()}`, width - 48, 64); context.textAlign = "left";
+  } else if (template === "overlay") {
+    drawAlignedArchive(context, archiveImage, width, height, Math.max(.5, Number(el.opacitySlider.value)));
+    context.fillStyle = "rgba(242,239,231,.08)"; context.fillRect(0,0,width,height);
+    context.fillStyle = "rgba(19,37,31,.82)"; context.font = "700 13px Microsoft YaHei, Arial"; context.fillText(`旧影叠合 · ${selectedPlace.oldCredit}`, 48, 64);
+  } else {
+    context.fillStyle = "rgba(15,32,26,.18)"; context.fillRect(0,0,width,height);
+    context.save(); context.translate(62, 62); context.rotate(-1.8 * Math.PI / 180); context.shadowColor = "rgba(0,0,0,.34)"; context.shadowBlur = 28; context.shadowOffsetY = 14; context.fillStyle = "#f2efe7"; context.fillRect(0,0,690,610); context.shadowColor = "transparent"; drawCover(context, archiveImage, 16,16,658,526); context.fillStyle = "#a54b38"; context.fillRect(16,542,658,45); context.fillStyle = "white"; context.font = "700 15px Microsoft YaHei, Arial"; context.fillText(`历史旧影 · ${selectedPlace.oldCredit}`, 32,571); context.restore();
+  }
+  drawCover(context, personImage, 0, 0, width, height);
+  drawCheckinFrame(context, width, height);
   return composite.toDataURL("image/jpeg", .94);
+}
+async function renderCheckinTemplate(template) {
+  if (!layeredCheckinAssets) return;
+  activeCheckinTemplate = template;
+  const buttons = [...document.querySelectorAll("[data-checkin-template]")]; buttons.forEach(button => { button.disabled = true; button.classList.toggle("is-active", button.dataset.checkinTemplate === template); });
+  el.compareHint.textContent = "正在重新生成古今合影…";
+  try { const composite = await composeThreeLayers(layeredCheckinAssets.personCutout, layeredCheckinAssets.presentSource, template); fieldImageSrc = composite; el.previewNew.src = composite; el.compareHint.textContent = "人物始终位于最前层；可继续切换构图，直到画面自然。"; }
+  catch { el.compareHint.textContent = "模板生成失败，请重新拍摄后再试。"; }
+  finally { buttons.forEach(button => { button.disabled = false; }); }
 }
 async function createLayeredCheckin(source) {
   el.captureBtn.disabled = true; el.referenceBtn.disabled = true; el.segmentationStatus.classList.remove("hidden");
   try {
     const image = await loadImage(source), scale = Math.min(1, 1280 / Math.max(image.width, image.height)), input = document.createElement("canvas"), context = input.getContext("2d");
     input.width = Math.max(1, Math.round(image.width * scale)); input.height = Math.max(1, Math.round(image.height * scale)); context.drawImage(image, 0, 0, input.width, input.height);
-    const cutout = await extractPersonCutout(input), composite = await composeThreeLayers(cutout);
+    const cutout = await extractPersonCutout(input); activeCheckinTemplate = "split"; layeredCheckinAssets = { presentSource:source, personCutout:cutout };
+    document.querySelectorAll("[data-checkin-template]").forEach(button => button.classList.toggle("is-active", button.dataset.checkinTemplate === activeCheckinTemplate));
+    const composite = await composeThreeLayers(cutout, source, activeCheckinTemplate);
     fieldImageSrc = composite;
     prepareResult(selectedPlace, composite, false, selectedPlace.oldPhoto, true);
-    el.resultInsight.textContent = "当代街景、历史旧影与你的身影已经合成在同一画面中。";
-    el.resultDetail.textContent = "滑动查看原始旧影与三层合影；下载纪念卡后，照片仍只保存在你的设备中。";
+    el.resultInsight.textContent = "你不是在复刻一张空景照，而是在和这个地点的过去合影。";
+    el.resultDetail.textContent = "现场街景位于底层，历史旧影成为清晰可见的背景，你的身影完整保留在最前面。可切换三种构图后下载纪念卡。";
   } catch (error) {
     showCameraError(`${error.message || "自动抠图失败"}。你可以换一张人物轮廓更清晰、光线更均匀的照片重试。`);
   } finally {
@@ -515,8 +568,10 @@ async function downloadPostcard() {
   try {
     const [oldImage, newImage] = await Promise.all([loadImage(el.previewOld.src), loadImage(el.previewNew.src)]);
     const canvas = document.createElement("canvas"), context = canvas.getContext("2d"), currentCredit = remoteMode ? selectedPlace.nowCredit : fieldCredit();
-    canvas.width = 1600; canvas.height = 1000;
-    if (!remoteMode) {
+    canvas.width = 1600; canvas.height = isLayeredCheckin ? 1200 : 1000;
+    if (isLayeredCheckin) {
+      drawCover(context, newImage, 0, 0, canvas.width, canvas.height);
+    } else if (!remoteMode) {
       drawCover(context, newImage, 0, 0, canvas.width, canvas.height);
       const shade = context.createLinearGradient(0, 450, 0, 1000);
       shade.addColorStop(0, "rgba(12,22,18,0)"); shade.addColorStop(1, "rgba(12,22,18,.88)");
@@ -605,11 +660,12 @@ el.alignOpacitySlider.addEventListener("input",event => { el.warpCanvas.style.op
 el.alignBackBtn.addEventListener("click",async () => { showPage("camera"); await startCamera(); }); el.skipAlignBtn.addEventListener("click",() => prepareResult(selectedPlace,fieldImageSrc,false,selectedPlace.oldPhoto)); el.confirmAlignBtn.addEventListener("click",confirmAlignment);
 el.compareSlider.addEventListener("input",event => setCompare(Number(event.target.value),el.compareOldWrap,el.compareHandle));
 document.querySelectorAll("[data-compare-mode]").forEach(button => button.addEventListener("click", () => setCompareMode(button.dataset.compareMode)));
+document.querySelectorAll("[data-checkin-template]").forEach(button => button.addEventListener("click", () => renderCheckinTemplate(button.dataset.checkinTemplate)));
 $("comparison-opacity").addEventListener("input", event => { const value = Number(event.target.value); el.compareOldWrap.style.opacity = value; $("comparison-opacity-value").value = `${Math.round(value * 100)}%`; });
 $("compare-stage").addEventListener("pointermove", updateTimeLens); $("compare-stage").addEventListener("pointerdown", updateTimeLens);
 $("blink-toggle").addEventListener("click", () => blinkTimer ? stopBlinkComparison() : startBlinkComparison());
 $("compare-fullscreen").addEventListener("click", async () => { try { if (document.fullscreenElement) await document.exitFullscreen(); else await $("compare-studio").requestFullscreen(); } catch { toast("Full-screen view is unavailable in this browser."); } });
-el.previewBackBtn.addEventListener("click",() => { if (remoteMode) { showPage("home"); $("stories").scrollIntoView({behavior:"smooth"}); } else { showPage("align"); renderPointMarkers(); } });
+el.previewBackBtn.addEventListener("click",async () => { if (remoteMode) { showPage("home"); $("stories").scrollIntoView({behavior:"smooth"}); } else if (isLayeredCheckin) { showPage("camera"); await startCamera(); } else { showPage("align"); renderPointMarkers(); } });
 el.retakeBtn.addEventListener("click",async () => { if (remoteMode) { showPage("home"); $("stories").scrollIntoView({behavior:"smooth"}); } else { showPage("camera"); await startCamera(); } });
 el.downloadBtn.addEventListener("click",downloadPostcard); el.finishBtn.addEventListener("click",finishVisit); window.addEventListener("resize",() => { renderPointMarkers(); loadDesktopImages(); }); window.addEventListener("beforeunload",stopCamera); document.addEventListener("visibilitychange",() => { if (document.hidden && !pages.camera.classList.contains("hidden")) stopCamera(); });
 document.addEventListener("keydown", event => { if (event.key !== "Escape") return; if (!el.collectionDrawer.classList.contains("hidden")) closeCollection(); else if (!$("onboarding").classList.contains("hidden")) closeOnboarding(); });
