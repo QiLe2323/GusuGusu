@@ -81,6 +81,23 @@ main{width:min(1180px,calc(100% - 48px));margin:0 auto}.hero-section{min-height:
   .place-card{display:none!important}
 }
 
+/* Capture ergonomics and nearest-place result */
+.nearest-place-result{position:absolute;z-index:570;left:15px;bottom:15px;max-width:min(280px,calc(100% - 30px));padding:11px 14px;border:1px solid #ffffff70;border-radius:13px;text-align:left;color:#fff;background:#173f34ed;box-shadow:0 10px 28px #0003;cursor:pointer}.nearest-place-result small,.nearest-place-result strong,.nearest-place-result span{display:block}.nearest-place-result small{color:#ffffff9c;font-size:8px;font-weight:800;letter-spacing:.14em}.nearest-place-result strong{margin-top:3px;font:700 18px var(--serif)}.nearest-place-result span{margin-top:3px;color:#ffffffba;font-size:9px}.alignment-review.is-waiting .warp-stage:after{content:"选择四组对应位置后显示对齐预览"}
+@media(max-width:680px){
+  #camera-page .camera-heading{margin:16px 0 12px;align-items:flex-start}
+  #camera-page .camera-heading h1{font-size:34px}
+  #camera-page .camera-heading .eyebrow{margin-bottom:7px}
+  #camera-page .camera-heading>div>p:last-child{margin-top:5px;font-size:10px}
+  #camera-page .proximity-status{display:none}
+  #camera-page .field-layout{gap:15px}
+  #camera-page .camera-container{border-radius:12px}
+  #camera-page .capture-method-note{margin:10px auto 0;padding:8px 10px}
+  #camera-page .capture-method-note span{display:none}
+  #camera-page .camera-actions{margin:9px auto 0}
+  #camera-page .privacy-note{margin-top:5px}
+  .nearest-place-result{left:10px;bottom:10px;max-width:calc(100% - 20px)}
+}
+
 .map-key>span{width:auto;height:auto;margin:0;border-radius:0;background:none}
 
 #camera.is-selfie{transform:scaleX(-1)}
@@ -451,6 +468,7 @@ button.progress-pill{border:0;cursor:pointer;font-family:inherit}
 .collection-empty span{font-size:39px;color:var(--red)}.collection-empty strong{color:var(--green);font:700 24px var(--serif)}.collection-empty p{max-width:270px;font-size:11px;line-height:1.6}
 .collection-actions{position:sticky;bottom:-32px;display:grid;gap:8px;margin:22px -32px -32px;padding:18px 32px calc(24px + env(safe-area-inset-bottom));background:linear-gradient(0deg,#f7f5ef 75%,#f7f5ef00)}
 .collection-actions button:disabled{opacity:.4;cursor:not-allowed}
+.camera-actions{margin-top:14px}.capture-method-note{margin:8px auto 0}
 
 @media(max-width:680px){
   .site-header nav>a{display:none}.header-tool{width:32px;height:32px}.progress-pill{padding:7px 9px!important}.progress-pill span{display:none}

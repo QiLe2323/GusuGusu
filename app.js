@@ -46,13 +46,13 @@ const places = [
 const $ = id => document.getElementById(id);
 const pages = { home: $("home-page"), camera: $("camera-page"), align: $("align-page"), preview: $("preview-page") };
 const el = {
-  storyGrid: $("story-grid"), routeStops: $("route-stops"), placeCard: $("place-card"), oldPhoto: $("old-photo"), nowPhoto: $("now-photo"), placeIndex: $("place-index"), placeName: $("place-name"), placeCn: $("place-cn"), placeDesc: $("place-desc"), changeFocus: $("change-focus"), shotTip: $("shot-tip"), distanceBadge: $("distance-badge"), navLink: $("nav-link"), remoteBtn: $("remote-btn"), startBtn: $("start-btn"), locateBtn: $("locate-btn"), locationToast: $("location-toast"), tryDemoBtn: $("try-demo-btn"), heroSlider: $("hero-slider"), heroOldWrap: $("hero-old-wrap"), heroHandle: $("hero-handle"), themeOptions: $("theme-options"), walkOptions: $("walk-options"), walkDetail: $("walk-detail"), activeExploreLabel: $("active-explore-label"),
+  storyGrid: $("story-grid"), routeStops: $("route-stops"), placeCard: $("place-card"), oldPhoto: $("old-photo"), nowPhoto: $("now-photo"), placeIndex: $("place-index"), placeName: $("place-name"), placeCn: $("place-cn"), placeDesc: $("place-desc"), changeFocus: $("change-focus"), shotTip: $("shot-tip"), distanceBadge: $("distance-badge"), navLink: $("nav-link"), remoteBtn: $("remote-btn"), startBtn: $("start-btn"), locateBtn: $("locate-btn"), locationToast: $("location-toast"), nearestPlaceResult: $("nearest-place-result"), nearestPlaceName: $("nearest-place-name"), nearestPlaceDistance: $("nearest-place-distance"), tryDemoBtn: $("try-demo-btn"), heroSlider: $("hero-slider"), heroOldWrap: $("hero-old-wrap"), heroHandle: $("hero-handle"), themeOptions: $("theme-options"), walkOptions: $("walk-options"), walkDetail: $("walk-detail"), activeExploreLabel: $("active-explore-label"),
   camera: $("camera"), cameraContainer: document.querySelector(".camera-container"), cameraGuide: document.querySelector(".camera-guide"), overlayPhoto: $("overlay-photo"), cameraPlaceholder: $("camera-placeholder"), cameraError: $("camera-error"), cameraErrorText: $("camera-error-text"), opacitySlider: $("opacity-slider"), opacityValue: $("opacity-value"), zoomSlider: $("zoom-slider"), zoomValue: $("zoom-value"), rotationSlider: $("rotation-slider"), rotationValue: $("rotation-value"), fitBtn: $("fit-btn"), lockBtn: $("lock-btn"), resetOverlayBtn: $("reset-overlay-btn"), ghostModeLabel: $("ghost-mode-label"), segmentationStatus: $("segmentation-status"), captureBtn: $("capture-btn"), uploadInput: $("upload-input"), referenceBtn: $("reference-btn"), captureMethodName: $("capture-method-name"), captureMethodCopy: $("capture-method-copy"), backHomeBtn: $("back-home-btn"), canvas: $("canvas"), cameraStep: $("camera-step"), cameraPlaceName: $("camera-place-name"), proximityStatus: $("proximity-status"), anchorList: $("anchor-list"),
   alignBackBtn: $("align-back-btn"), alignPlaceName: $("align-place-name"), pairCount: $("pair-count"), alignStepNumber: $("align-step-number"), alignInstructionTitle: $("align-instruction-title"), alignInstructionCopy: $("align-instruction-copy"), oldPointStage: $("old-point-stage"), newPointStage: $("new-point-stage"), alignOld: $("align-old"), alignNew: $("align-new"), oldPointLayer: $("old-point-layer"), newPointLayer: $("new-point-layer"), undoPointBtn: $("undo-point-btn"), clearPointsBtn: $("clear-points-btn"), alignmentReview: $("alignment-review"), reviewTitle: $("review-title"), alignmentQuality: $("alignment-quality"), alignPreviewNew: $("align-preview-new"), warpCanvas: $("warp-canvas"), alignOpacitySlider: $("align-opacity-slider"), alignOpacityValue: $("align-opacity-value"), skipAlignBtn: $("skip-align-btn"), confirmAlignBtn: $("confirm-align-btn"),
   previewOld: $("preview-old"), previewNew: $("preview-new"), previewPlaceName: $("preview-place-name"), previewBackBtn: $("preview-back-btn"), retakeBtn: $("retake-btn"), downloadBtn: $("download-btn"), finishBtn: $("finish-btn"), layerStackNote: $("layer-stack-note"), checkinTemplatePicker: $("checkin-template-picker"), compareStudio: $("compare-studio"), compareHint: $("compare-hint"), compareSlider: $("compare-slider"), compareOldWrap: $("compare-old-wrap"), compareHandle: $("compare-handle"), resultInsight: $("result-insight"), resultDetail: $("result-detail"), visitedCount: $("visited-count"), savedCount: $("saved-count"), savePlaceBtn: $("save-place-btn"), visitProof: $("visit-proof"), visitPhoto: $("visit-photo"), visitDate: $("visit-date"), collectionDrawer: $("collection-drawer"), collectionList: $("collection-list")
 };
 
-let selectedPlace = places[0], cameraStream = null, userPosition = null, userMarker = null, referenceOnly = false, remoteMode = false, map = null, fieldImageSrc = "";
+let selectedPlace = places[0], cameraStream = null, userPosition = null, userMarker = null, nearestLocatedPlace = null, referenceOnly = false, remoteMode = false, map = null, fieldImageSrc = "";
 const markers = new Map();
 const visited = new Set(JSON.parse(localStorage.getItem("gusu-visited") || "[]"));
 const savedPlaces = new Set(JSON.parse(localStorage.getItem("gusu-saved-route") || "[]"));
@@ -62,6 +62,7 @@ Object.keys(visitRecords).forEach(id => visited.add(id));
 localStorage.setItem("gusu-visited", JSON.stringify([...visited])); localStorage.setItem("gusu-visit-records", JSON.stringify(visitRecords));
 const pointColors = ["#b84937", "#187567", "#c38b26", "#315aa0", "#8b4da0", "#227c9d"];
 const overlayState = { x: 0, y: 0, scale: 1, rotation: 0, fit: "cover", locked: false };
+let overlayViewport = { width: 1, height: 1 };
 const activePointers = new Map();
 let pinchStart = null;
 const alignment = { pairs: [], pending: null, oldImage: null, newImage: null, homography: null };
@@ -306,7 +307,7 @@ function updateMarkerVisuals() {
     const curatedIndex = activeCuratedRoute ? activeCuratedRoute.ids.indexOf(place.id) : -1;
     node.classList.toggle("is-active", place.id === selectedPlace.id);
     node.classList.toggle("is-visited", isVisited);
-    node.classList.toggle("is-filtered-out", Boolean(activeBrowseIds) && !activeBrowseIds.has(place.id));
+    node.classList.toggle("is-filtered-out", Boolean(activeBrowseIds) && !activeBrowseIds.has(place.id) && place.id !== selectedPlace.id);
     node.classList.toggle("is-curated-stop", curatedIndex >= 0);
     node.querySelector(".photo-pin-badge").textContent = curatedIndex >= 0 ? String(curatedIndex + 1) : (isVisited ? "✓" : "");
     node.setAttribute("aria-label", `${place.name}, archival photograph, ${place.oldCredit}, ${isVisited ? "visited" : "not visited"}`);
@@ -369,27 +370,29 @@ function selectPlace(place, scroll = false, moveMap = true) {
   if (scroll && window.matchMedia("(min-width: 681px)").matches) setTimeout(() => el.placeCard.scrollIntoView({ behavior: "smooth", block: "center" }), 300);
 }function showPage(name) { if (name !== "preview") stopBlinkComparison(); if (name !== "home") stopHeroBlink(); Object.entries(pages).forEach(([key, page]) => page.classList.toggle("hidden", key !== name)); window.scrollTo({ top: 0, behavior: "smooth" }); if (name === "home") setTimeout(() => map?.resize(), 120); }
 function distanceMeters(a, b) { const rad = value => value * Math.PI / 180, dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng), x = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2; return 6371000 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x)); }
-const formatDistance = distance => distance < 1000 ? `About ${Math.round(distance / 10) * 10} m away` : `About ${(distance / 1000).toFixed(1)} km away`;
-function updateDistance() { if (!userPosition) { el.distanceBadge.textContent = "Locate yourself to see distance"; el.proximityStatus.querySelector("b").textContent = "Location optional"; return; } const distance = distanceMeters(userPosition, selectedPlace); el.distanceBadge.textContent = formatDistance(distance); el.proximityStatus.classList.toggle("is-far", distance > 120); el.proximityStatus.querySelector("b").textContent = distance <= 120 ? "Within the suggested viewpoint" : formatDistance(distance); }
+const formatDistance = distance => distance < 1000 ? `约 ${Math.max(10, Math.round(distance / 10) * 10)} 米` : `约 ${(distance / 1000).toFixed(1)} 公里`;
+function updateDistance() { if (!userPosition) { el.distanceBadge.textContent = "定位后查看距离"; el.proximityStatus.querySelector("b").textContent = "无需定位也可体验"; return; } const distance = distanceMeters(userPosition, selectedPlace); el.distanceBadge.textContent = formatDistance(distance); el.proximityStatus.classList.toggle("is-far", distance > 120); el.proximityStatus.querySelector("b").textContent = distance <= 120 ? "已到达建议拍摄点附近" : `距离拍摄点 ${formatDistance(distance)}`; }
 function toast(message) { el.locationToast.textContent = message; el.locationToast.classList.remove("hidden"); clearTimeout(toast.timer); toast.timer = setTimeout(() => el.locationToast.classList.add("hidden"), 3800); }
 function locateUser() {
-  if (!navigator.geolocation) { toast("Location is unavailable here. You can still explore every story."); return; }
+  if (!navigator.geolocation) { toast("当前浏览器无法定位，你仍然可以浏览全部地点。"); return; }
   clearTimeout(resetLocate.timer);
-  el.locateBtn.disabled = true; el.locateBtn.innerHTML = "<span>⌖</span> Locating…";
+  el.locateBtn.disabled = true; el.locateBtn.innerHTML = "<span>⌖</span> 正在定位…";
   navigator.geolocation.getCurrentPosition(position => {
     const positionFound = { lat: position.coords.latitude, lng: position.coords.longitude };
     userMarker?.remove(); userMarker = null;
-    if (!isInsideSuzhou(positionFound)) { resetLocate(); return; }
+    if (!isInsideSuzhou(positionFound)) { el.nearestPlaceResult.classList.add("hidden"); toast("你目前不在苏州范围内，仍可使用线上探索。"); resetLocate(); return; }
     userPosition = positionFound;
-    const node = document.createElement("div"); node.className = "user-pin"; node.setAttribute("aria-label", "Your location in Suzhou");
+    const node = document.createElement("div"); node.className = "user-pin"; node.setAttribute("aria-label", "你在苏州的位置");
     userMarker = new maplibregl.Marker({ element: node, anchor:"center" }).setLngLat([userPosition.lng, userPosition.lat]).addTo(map);
-    const inGusu = isInsideGusuMap(userPosition), nearest = places.reduce((best, place) => distanceMeters(userPosition, place) < best.distance ? { place, distance:distanceMeters(userPosition, place) } : best, { place:places[0], distance:Infinity });
-    map.flyTo({ center:[userPosition.lng, userPosition.lat], zoom:inGusu ? 16 : 12.5, duration:700, essential:true });
+    const nearest = places.reduce((best, place) => distanceMeters(userPosition, place) < best.distance ? { place, distance:distanceMeters(userPosition, place) } : best, { place:places[0], distance:Infinity });
+    nearestLocatedPlace = nearest.place; selectPlace(nearest.place, false, false);
+    el.nearestPlaceName.textContent = nearest.place.cn.split("·")[0]; el.nearestPlaceDistance.textContent = `${formatDistance(nearest.distance)} · 点击查看地点详情`; el.nearestPlaceResult.classList.remove("hidden");
+    const bounds = new maplibregl.LngLatBounds(); bounds.extend([userPosition.lng,userPosition.lat]); bounds.extend([nearest.place.lng,nearest.place.lat]); map.fitBounds(bounds,{padding:{top:85,right:55,bottom:120,left:55},maxZoom:16,duration:700});
     updateDistance(); resetLocate(true);
-    toast(inGusu ? "Located in Gusu. Viewpoint distances are now live." : `Located in Suzhou · nearest archive viewpoint is ${formatDistance(nearest.distance).replace("About ", "")} away.`);
-  }, error => { toast(error.code === 1 ? "Location permission was not granted. The remote experience still works." : "Your location could not be determined."); resetLocate(); }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
+    toast(`离你最近的是 ${nearest.place.cn.split("·")[0]}，距离 ${formatDistance(nearest.distance)}。`);
+  }, error => { toast(error.code === 1 ? "尚未获得定位权限，你仍可使用线上探索。" : "暂时无法获取你的位置，请稍后重试。"); resetLocate(); }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
 }
-function resetLocate(success = false) { el.locateBtn.disabled = false; el.locateBtn.classList.toggle("is-located", success); el.locateBtn.innerHTML = success ? "<span>✓</span> Located" : "<span>⌖</span> Locate me"; if (success) resetLocate.timer = setTimeout(() => resetLocate(false), 2400); }
+function resetLocate(success = false) { el.locateBtn.disabled = false; el.locateBtn.classList.toggle("is-located", success); el.locateBtn.innerHTML = success ? "<span>✓</span> 已找到最近景点" : "<span>⌖</span> 定位并找最近景点"; }
 
 function applyOverlayTransform() { el.overlayPhoto.style.transform = `translate3d(${overlayState.x}px,${overlayState.y}px,0) rotate(${overlayState.rotation}deg) scale(${overlayState.scale})`; el.overlayPhoto.style.objectFit = overlayState.fit; el.zoomSlider.value = Math.round(overlayState.scale * 100); el.rotationSlider.value = overlayState.rotation; el.zoomValue.value = `${Math.round(overlayState.scale * 100)}%`; el.rotationValue.value = `${Number(overlayState.rotation).toFixed(overlayState.rotation % 1 ? 1 : 0)}°`; el.fitBtn.textContent = overlayState.fit === "cover" ? "完整显示" : "铺满画面"; el.lockBtn.textContent = overlayState.locked ? "解锁旧影" : "锁定旧影"; el.lockBtn.classList.toggle("is-active", overlayState.locked); el.cameraContainer.classList.toggle("is-locked", overlayState.locked); el.ghostModeLabel.textContent = overlayState.locked ? "旧影已锁定" : "旧影可移动 · 拖动调整位置"; }
 function resetOverlay() { Object.assign(overlayState, { x: 0, y: 0, scale: 1, rotation: 0, fit: "cover", locked: false }); applyOverlayTransform(); }
@@ -427,7 +430,7 @@ function updateCaptureMethod() {
 }
 async function startField() { remoteMode = false; isLayeredCheckin = false; layeredCheckinAssets = null; fieldImageSrc = ""; cameraFacingMode = "user"; el.cameraStep.textContent = `点位 ${formatIndex(places.indexOf(selectedPlace))} · 古今合影打卡`; el.cameraPlaceName.textContent = `${selectedPlace.name} · ${selectedPlace.cn}`; el.overlayPhoto.src = selectedPlace.oldPhoto; $("camera-credit").textContent = selectedPlace.oldCredit; el.anchorList.innerHTML = selectedPlace.anchors.map((anchor, index) => `<li><b>${index + 1}</b> ${anchor}</li>`).join(""); el.opacitySlider.value = .58; referenceOnly = false; updateCaptureMethod(); resetOverlay(); setOpacity(.58); updateDistance(); showPage("camera"); await startCamera(); }
 async function startCamera() { stopCamera(); el.camera.classList.toggle("is-selfie", cameraFacingMode === "user"); updateCaptureMethod(); el.cameraError.classList.add("hidden"); el.cameraPlaceholder.classList.remove("hidden"); el.cameraPlaceholder.querySelector("strong").textContent = "正在打开相机"; el.cameraPlaceholder.querySelector("p").textContent = cameraFacingMode === "user" ? "把自己和街景一起放进画面" : "请同伴用后置镜头拍下你和街景"; if (!navigator.mediaDevices?.getUserMedia) { showCameraError("当前浏览器无法直接使用相机，请上传一张人物照片继续。"); return; } try { cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: cameraFacingMode }, width: { ideal: 1920 }, height: { ideal: 1280 } }, audio: false }); el.camera.srcObject = cameraStream; await el.camera.play(); el.cameraPlaceholder.classList.add("hidden"); } catch (error) { showCameraError(error.name === "NotAllowedError" ? "相机权限尚未开启，请在浏览器设置中允许，或上传人物照片。" : "无法打开相机，请上传人物照片继续。"); } }
-function showCameraError(message) { el.cameraErrorText.textContent = message; el.cameraError.classList.remove("hidden"); el.cameraPlaceholder.querySelector("strong").textContent = "Continue with a photo"; el.cameraPlaceholder.querySelector("p").textContent = "Your image never leaves this device"; }
+function showCameraError(message) { el.cameraErrorText.textContent = message; el.cameraError.classList.remove("hidden"); el.cameraPlaceholder.querySelector("strong").textContent = "可上传照片继续"; el.cameraPlaceholder.querySelector("p").textContent = "照片只在你的设备中处理"; }
 function stopCamera() { cameraStream?.getTracks().forEach(track => track.stop()); cameraStream = null; el.camera.srcObject = null; }
 async function capturePhoto() { if (!el.camera.videoWidth) { showCameraError("相机还没有准备好，请稍等片刻或上传人物照片。"); return; } const canvas = el.canvas, context = canvas.getContext("2d"); canvas.width = el.camera.videoWidth; canvas.height = el.camera.videoHeight; if (cameraFacingMode === "user") { context.translate(canvas.width, 0); context.scale(-1, 1); } context.drawImage(el.camera, 0, 0, canvas.width, canvas.height); const captured = canvas.toDataURL("image/jpeg", .92); await createLayeredCheckin(captured); }
 function handleUpload(event) { const file = event.target.files?.[0]; if (!file?.type.startsWith("image/")) return; const reader = new FileReader(); reader.onload = async () => { await createLayeredCheckin(reader.result); }; reader.readAsDataURL(file); event.target.value = ""; }
@@ -447,7 +450,7 @@ async function getSelfieSegmenter() {
   })();
   return selfieSegmenterPromise;
 }
-async function extractPersonCutout(sourceCanvas) {
+async function extractPersonMask(sourceCanvas) {
   const segmenter = await getSelfieSegmenter();
   const results = await new Promise((resolve, reject) => {
     const timeout = setTimeout(() => { segmentationResolve = null; segmentationReject = null; reject(new Error("人物识别超时，请换一张人物更清晰的照片")); }, 18000);
@@ -456,16 +459,15 @@ async function extractPersonCutout(sourceCanvas) {
     segmenter.send({ image: sourceCanvas }).catch(error => { const fail = segmentationReject; segmentationResolve = null; segmentationReject = null; fail?.(error); });
   });
   if (!results.segmentationMask) throw new Error("没有识别到清晰的人物");
-  const cutout = document.createElement("canvas"), context = cutout.getContext("2d");
-  cutout.width = sourceCanvas.width; cutout.height = sourceCanvas.height;
-  context.drawImage(results.segmentationMask, 0, 0, cutout.width, cutout.height);
-  context.globalCompositeOperation = "source-in";
-  context.drawImage(sourceCanvas, 0, 0, cutout.width, cutout.height);
-  context.globalCompositeOperation = "source-over";
-  return cutout.toDataURL("image/png");
+  const mask = document.createElement("canvas"), context = mask.getContext("2d");
+  mask.width = sourceCanvas.width; mask.height = sourceCanvas.height;
+  context.drawImage(results.segmentationMask, 0, 0, mask.width, mask.height);
+  return mask.toDataURL("image/png");
 }
 function drawAlignedArchive(context, archiveImage, width, height, alpha = 1, clip = null) {
-  const cameraRect = el.cameraContainer.getBoundingClientRect(), offsetScaleX = width / Math.max(1, cameraRect.width), offsetScaleY = height / Math.max(1, cameraRect.height);
+  const cameraRect = el.cameraContainer.getBoundingClientRect();
+  if (cameraRect.width > 0 && cameraRect.height > 0) overlayViewport = { width:cameraRect.width, height:cameraRect.height };
+  const offsetScaleX = width / Math.max(1, overlayViewport.width), offsetScaleY = height / Math.max(1, overlayViewport.height);
   context.save();
   if (clip) { context.beginPath(); context.rect(clip.x, clip.y, clip.width, clip.height); context.clip(); }
   context.globalAlpha = alpha; context.filter = "grayscale(.18) sepia(.28) contrast(1.08)";
@@ -481,25 +483,29 @@ function drawCheckinFrame(context, width, height) {
   context.font = "700 32px Microsoft YaHei, Georgia"; context.fillText(selectedPlace.cn, 48, height - 35);
   context.textAlign = "right"; context.font = "700 14px Arial"; context.fillText("GUSU · PAST & PRESENT", width - 48, height - 67); context.font = "15px Microsoft YaHei, Arial"; context.fillText(`${selectedPlace.oldCredit.split("·")[0].trim()} × ${new Date().getFullYear()}`, width - 48, height - 36); context.textAlign = "left";
 }
-async function composeThreeLayers(personCutoutSrc, presentSource, template = activeCheckinTemplate) {
-  const [presentImage, archiveImage, personImage] = await Promise.all([loadImage(presentSource), loadImage(selectedPlace.oldPhoto), loadImage(personCutoutSrc)]);
+async function composeThreeLayers(personMaskSrc, presentSource, template = activeCheckinTemplate) {
+  const [presentImage, archiveImage, personMask] = await Promise.all([loadImage(presentSource), loadImage(selectedPlace.oldPhoto), loadImage(personMaskSrc)]);
   const composite = document.createElement("canvas"), context = composite.getContext("2d"), width = 1200, height = 900;
+  const historicLayer = document.createElement("canvas"), historicContext = historicLayer.getContext("2d");
   composite.width = width; composite.height = height;
+  historicLayer.width = width; historicLayer.height = height;
   drawCover(context, presentImage, 0, 0, width, height);
   if (template === "split") {
     const splitX = Math.round(width * .54);
-    drawAlignedArchive(context, archiveImage, width, height, 1, { x:0, y:0, width:splitX, height });
-    const seam = context.createLinearGradient(splitX - 34, 0, splitX + 34, 0); seam.addColorStop(0,"rgba(242,239,231,0)"); seam.addColorStop(.48,"rgba(242,239,231,.95)"); seam.addColorStop(.52,"rgba(242,239,231,.95)"); seam.addColorStop(1,"rgba(242,239,231,0)"); context.fillStyle = seam; context.fillRect(splitX - 34, 24, 68, height - 48);
-    context.fillStyle = "rgba(19,37,31,.82)"; context.font = "700 13px Microsoft YaHei, Arial"; context.fillText(`过去 · ${selectedPlace.oldCredit.split("·")[0].trim()}`, 48, 64); context.textAlign = "right"; context.fillText(`现在 · ${new Date().getFullYear()}`, width - 48, 64); context.textAlign = "left";
+    drawAlignedArchive(historicContext, archiveImage, width, height, 1, { x:0, y:0, width:splitX, height });
+    const seam = historicContext.createLinearGradient(splitX - 34, 0, splitX + 34, 0); seam.addColorStop(0,"rgba(242,239,231,0)"); seam.addColorStop(.48,"rgba(242,239,231,.82)"); seam.addColorStop(.52,"rgba(242,239,231,.82)"); seam.addColorStop(1,"rgba(242,239,231,0)"); historicContext.fillStyle = seam; historicContext.fillRect(splitX - 34, 24, 68, height - 48);
   } else if (template === "overlay") {
-    drawAlignedArchive(context, archiveImage, width, height, Math.max(.5, Number(el.opacitySlider.value)));
-    context.fillStyle = "rgba(242,239,231,.08)"; context.fillRect(0,0,width,height);
-    context.fillStyle = "rgba(19,37,31,.82)"; context.font = "700 13px Microsoft YaHei, Arial"; context.fillText(`旧影叠合 · ${selectedPlace.oldCredit}`, 48, 64);
+    drawAlignedArchive(historicContext, archiveImage, width, height, Math.max(.46, Number(el.opacitySlider.value)));
+    historicContext.fillStyle = "rgba(242,239,231,.06)"; historicContext.fillRect(0,0,width,height);
   } else {
-    context.fillStyle = "rgba(15,32,26,.18)"; context.fillRect(0,0,width,height);
-    context.save(); context.translate(62, 62); context.rotate(-1.8 * Math.PI / 180); context.shadowColor = "rgba(0,0,0,.34)"; context.shadowBlur = 28; context.shadowOffsetY = 14; context.fillStyle = "#f2efe7"; context.fillRect(0,0,690,610); context.shadowColor = "transparent"; drawCover(context, archiveImage, 16,16,658,526); context.fillStyle = "#a54b38"; context.fillRect(16,542,658,45); context.fillStyle = "white"; context.font = "700 15px Microsoft YaHei, Arial"; context.fillText(`历史旧影 · ${selectedPlace.oldCredit}`, 32,571); context.restore();
+    historicContext.fillStyle = "rgba(15,32,26,.14)"; historicContext.fillRect(0,0,width,height);
+    historicContext.save(); historicContext.translate(62, 62); historicContext.rotate(-1.8 * Math.PI / 180); historicContext.shadowColor = "rgba(0,0,0,.34)"; historicContext.shadowBlur = 28; historicContext.shadowOffsetY = 14; historicContext.fillStyle = "#f2efe7"; historicContext.fillRect(0,0,690,610); historicContext.shadowColor = "transparent"; drawCover(historicContext, archiveImage, 16,16,658,526); historicContext.fillStyle = "#a54b38"; historicContext.fillRect(16,542,658,45); historicContext.fillStyle = "white"; historicContext.font = "700 15px Microsoft YaHei, Arial"; historicContext.fillText(`历史旧影 · ${selectedPlace.oldCredit}`, 32,571); historicContext.restore();
   }
-  drawCover(context, personImage, 0, 0, width, height);
+  historicContext.save(); historicContext.globalCompositeOperation = "destination-out"; historicContext.filter = "blur(10px)"; drawCover(historicContext, personMask, 0, 0, width, height); historicContext.restore();
+  context.drawImage(historicLayer, 0, 0);
+  context.fillStyle = "rgba(19,37,31,.82)"; context.font = "700 13px Microsoft YaHei, Arial";
+  if (template === "split") { context.fillText(`过去 · ${selectedPlace.oldCredit.split("·")[0].trim()}`, 48, 64); context.textAlign = "right"; context.fillText(`现在 · ${new Date().getFullYear()}`, width - 48, 64); context.textAlign = "left"; }
+  if (template === "overlay") context.fillText(`人物保持现场光影 · 背景叠合 ${selectedPlace.oldCredit}`, 48, 64);
   drawCheckinFrame(context, width, height);
   return composite.toDataURL("image/jpeg", .94);
 }
@@ -508,7 +514,7 @@ async function renderCheckinTemplate(template) {
   activeCheckinTemplate = template;
   const buttons = [...document.querySelectorAll("[data-checkin-template]")]; buttons.forEach(button => { button.disabled = true; button.classList.toggle("is-active", button.dataset.checkinTemplate === template); });
   el.compareHint.textContent = "正在重新生成古今合影…";
-  try { const composite = await composeThreeLayers(layeredCheckinAssets.personCutout, layeredCheckinAssets.presentSource, template); fieldImageSrc = composite; el.previewNew.src = composite; el.compareHint.textContent = "人物始终位于最前层；可继续切换构图，直到画面自然。"; }
+  try { const composite = await composeThreeLayers(layeredCheckinAssets.personMask, layeredCheckinAssets.presentSource, template); fieldImageSrc = composite; el.previewNew.src = composite; el.compareHint.textContent = "人物保留原始光线、脚下环境和自然边缘；可继续切换背景构图。"; }
   catch { el.compareHint.textContent = "模板生成失败，请重新拍摄后再试。"; }
   finally { buttons.forEach(button => { button.disabled = false; }); }
 }
@@ -517,15 +523,15 @@ async function createLayeredCheckin(source) {
   try {
     const image = await loadImage(source), scale = Math.min(1, 1280 / Math.max(image.width, image.height)), input = document.createElement("canvas"), context = input.getContext("2d");
     input.width = Math.max(1, Math.round(image.width * scale)); input.height = Math.max(1, Math.round(image.height * scale)); context.drawImage(image, 0, 0, input.width, input.height);
-    const cutout = await extractPersonCutout(input); activeCheckinTemplate = "split"; layeredCheckinAssets = { presentSource:source, personCutout:cutout };
+    const personMask = await extractPersonMask(input); activeCheckinTemplate = "split"; layeredCheckinAssets = { presentSource:source, personMask };
     document.querySelectorAll("[data-checkin-template]").forEach(button => button.classList.toggle("is-active", button.dataset.checkinTemplate === activeCheckinTemplate));
-    const composite = await composeThreeLayers(cutout, source, activeCheckinTemplate);
+    const composite = await composeThreeLayers(personMask, source, activeCheckinTemplate);
     fieldImageSrc = composite;
     prepareResult(selectedPlace, composite, false, selectedPlace.oldPhoto, true);
     el.resultInsight.textContent = "你不是在复刻一张空景照，而是在和这个地点的过去合影。";
-    el.resultDetail.textContent = "现场街景位于底层，历史旧影成为清晰可见的背景，你的身影完整保留在最前面。可切换三种构图后下载纪念卡。";
+    el.resultDetail.textContent = "系统只在人物身后的区域融合历史旧影，人物仍保留现场原图中的光线、脚下环境和柔和边缘，不再像被剪下后贴到背景上。";
   } catch (error) {
-    showCameraError(`${error.message || "自动抠图失败"}。你可以换一张人物轮廓更清晰、光线更均匀的照片重试。`);
+    showCameraError(`${error.message || "人物识别失败"}。你可以换一张人物轮廓更清晰、光线更均匀的照片重试。`);
   } finally {
     el.segmentationStatus.classList.add("hidden"); el.captureBtn.disabled = false; el.referenceBtn.disabled = false;
   }
@@ -539,7 +545,7 @@ function renderPointMarkers() { if (!alignment.oldImage || !alignment.newImage) 
 function handlePointClick(side, event) { if (!alignment.oldImage || !alignment.newImage) return; if (alignment.pairs.length >= 6 && !alignment.pending) { el.alignInstructionTitle.textContent = "Six pairs are enough."; el.alignInstructionCopy.textContent = "Review the overlay below, or undo a point to replace it."; return; } if (side === "old") { const point = eventToImagePoint(event, el.oldPointStage, alignment.oldImage); if (!point) return; alignment.pending = point; } else { if (!alignment.pending) { el.alignInstructionTitle.textContent = "Start on the archive photograph."; el.alignInstructionCopy.textContent = "Tap a stable landmark on the left, then tap the same landmark here."; return; } const point = eventToImagePoint(event, el.newPointStage, alignment.newImage); if (!point) return; alignment.pairs.push({ old: alignment.pending, new: point }); alignment.pending = null; } updateAlignmentUI(); }
 function updateAlignmentUI() { const count = alignment.pairs.length; el.pairCount.textContent = `${count} / 4`; if (alignment.pending) { el.alignStepNumber.textContent = count + 1; el.alignInstructionTitle.textContent = "Now tap the same landmark in the present photo."; el.alignInstructionCopy.textContent = "Be precise: choose the exact same corner or junction on the right."; } else if (count < 4) { el.alignStepNumber.textContent = count + 1; el.alignInstructionTitle.textContent = count ? "Choose another landmark in the archive." : "Tap a landmark in the archive."; el.alignInstructionCopy.textContent = "Spread points across the whole frame—near the corners and centre—not in one cluster."; } else if (count < 6) { el.alignStepNumber.textContent = "✓"; el.alignInstructionTitle.textContent = "The perspective alignment is ready."; el.alignInstructionCopy.textContent = "Add one or two more pairs for a steadier result, or inspect the transparency preview below."; } else { el.alignStepNumber.textContent = "✓"; el.alignInstructionTitle.textContent = "Maximum landmark set complete."; el.alignInstructionCopy.textContent = "Inspect the transparency preview and use the aligned comparison when it looks right."; } renderPointMarkers(); el.undoPointBtn.disabled = !alignment.pending && count === 0; el.clearPointsBtn.disabled = !alignment.pending && count === 0; if (count >= 4) renderAlignment(); else resetWarpCanvas(); }
 function renewWarpCanvas() { const previous = el.warpCanvas, canvas = document.createElement("canvas"); canvas.id = "warp-canvas"; canvas.setAttribute("aria-label", "Warped archival photograph"); canvas.style.opacity = previous.style.opacity || el.alignOpacitySlider.value; previous.replaceWith(canvas); el.warpCanvas = canvas; return canvas; }
-function resetWarpCanvas() { alignment.homography = null; renewWarpCanvas(); el.alignmentReview.classList.add("is-waiting"); el.reviewTitle.textContent = "Add four landmark pairs to preview the warp."; el.alignmentQuality.textContent = "WAITING FOR POINTS"; el.alignmentQuality.className = "quality-chip"; el.alignOpacitySlider.disabled = true; el.confirmAlignBtn.disabled = true; }
+function resetWarpCanvas() { alignment.homography = null; renewWarpCanvas(); el.alignmentReview.classList.add("is-waiting"); el.reviewTitle.textContent = "选择四组对应位置后查看对齐效果。"; el.alignmentQuality.textContent = "等待选择对应点"; el.alignmentQuality.className = "quality-chip"; el.alignOpacitySlider.disabled = true; el.confirmAlignBtn.disabled = true; }
 
 function solveLinear(matrix, vector) { const size = vector.length, augmented = matrix.map((row, index) => [...row, vector[index]]); for (let column = 0; column < size; column += 1) { let pivot = column; for (let row = column + 1; row < size; row += 1) if (Math.abs(augmented[row][column]) > Math.abs(augmented[pivot][column])) pivot = row; if (Math.abs(augmented[pivot][column]) < 1e-10) return null; [augmented[column], augmented[pivot]] = [augmented[pivot], augmented[column]]; const divisor = augmented[column][column]; for (let j = column; j <= size; j += 1) augmented[column][j] /= divisor; for (let row = 0; row < size; row += 1) { if (row === column) continue; const factor = augmented[row][column]; for (let j = column; j <= size; j += 1) augmented[row][j] -= factor * augmented[column][j]; } } return augmented.map(row => row[size]); }
 function solveLeastSquares(matrix, vector) { const columns = matrix[0].length, ata = Array.from({ length: columns }, () => Array(columns).fill(0)), atb = Array(columns).fill(0); for (let row = 0; row < matrix.length; row += 1) for (let i = 0; i < columns; i += 1) { atb[i] += matrix[row][i] * vector[row]; for (let j = 0; j < columns; j += 1) ata[i][j] += matrix[row][i] * matrix[row][j]; } return solveLinear(ata, atb); }
@@ -619,7 +625,7 @@ async function makeVisitThumbnail(source) {
 }
 async function finishVisit() {
   if (remoteMode) { toggleSaved(selectedPlace); el.finishBtn.textContent = savedPlaces.has(selectedPlace.id) ? "♥ Saved to route" : "♡ Save to route"; return; }
-  el.finishBtn.disabled = true; el.finishBtn.textContent = "Saving field record…";
+  el.finishBtn.disabled = true; el.finishBtn.textContent = "正在保存打卡记录…";
   const photo = await makeVisitThumbnail(el.previewNew.src);
   visited.add(selectedPlace.id);
   visitRecords[selectedPlace.id] = { date:new Date().toISOString(), photo };
@@ -629,7 +635,7 @@ async function finishVisit() {
   el.finishBtn.disabled = false;
   updateVisited(); showPage("home"); selectPlace(selectedPlace);
   if (window.matchMedia("(min-width: 681px)").matches) setTimeout(() => el.placeCard.scrollIntoView({ behavior: "smooth", block: "center" }), 200);
-  toast("Revisit complete — date, photograph and stamp saved on this device.");
+  toast("打卡完成：日期、照片和印章已保存在你的设备中。");
 }
 function updateVisited() {
   el.visitedCount.textContent = `${visited.size} / ${places.length}`;
@@ -653,7 +659,7 @@ el.tryDemoBtn.addEventListener("click", () => { $("hero-demo").scrollIntoView({b
 $("guide-btn").addEventListener("click", openOnboarding); $("onboarding-skip").addEventListener("click", closeOnboarding); $("onboarding-next").addEventListener("click", advanceOnboarding);
 $("collection-btn").addEventListener("click", openCollection); $("open-route-btn").addEventListener("click", openCollection); $("collection-close").addEventListener("click", closeCollection); $("collection-scrim").addEventListener("click", closeCollection);
 $("show-route-btn").addEventListener("click", showSavedRoute); $("clear-route-btn").addEventListener("click", () => { savedPlaces.clear(); persistSavedPlaces(); updateSavedButton(); updateCollection(); updateMapSelectionCard(selectedPlace); }); el.savePlaceBtn.addEventListener("click", () => toggleSaved(selectedPlace));
-el.locateBtn.addEventListener("click",locateUser); el.remoteBtn.addEventListener("click",() => openRemote(selectedPlace)); el.startBtn.addEventListener("click",startField);
+el.locateBtn.addEventListener("click",locateUser); el.nearestPlaceResult.addEventListener("click",() => { if (!nearestLocatedPlace) return; selectPlace(nearestLocatedPlace, true, true); }); el.remoteBtn.addEventListener("click",() => openRemote(selectedPlace)); el.startBtn.addEventListener("click",startField);
 el.backHomeBtn.addEventListener("click",() => { stopCamera(); showPage("home"); setTimeout(() => el.placeCard.scrollIntoView({behavior:"smooth",block:"center"}),150); });
 el.opacitySlider.addEventListener("input",event => setOpacity(event.target.value));
 el.zoomSlider.addEventListener("input",event => { overlayState.scale = Number(event.target.value)/100; applyOverlayTransform(); });
