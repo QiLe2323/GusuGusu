@@ -46,10 +46,10 @@ const places = [
 const $ = id => document.getElementById(id);
 const pages = { home: $("home-page"), camera: $("camera-page"), align: $("align-page"), preview: $("preview-page") };
 const el = {
-  storyGrid: $("story-grid"), routeStops: $("route-stops"), placeCard: $("place-card"), oldPhoto: $("old-photo"), nowPhoto: $("now-photo"), placeIndex: $("place-index"), placeName: $("place-name"), placeCn: $("place-cn"), placeDesc: $("place-desc"), changeFocus: $("change-focus"), shotTip: $("shot-tip"), distanceBadge: $("distance-badge"), navLink: $("nav-link"), remoteBtn: $("remote-btn"), startBtn: $("start-btn"), locateBtn: $("locate-btn"), locationToast: $("location-toast"), tryDemoBtn: $("try-demo-btn"), heroSlider: $("hero-slider"), heroOldWrap: $("hero-old-wrap"), heroHandle: $("hero-handle"),
-  camera: $("camera"), cameraContainer: document.querySelector(".camera-container"), overlayPhoto: $("overlay-photo"), cameraPlaceholder: $("camera-placeholder"), cameraError: $("camera-error"), cameraErrorText: $("camera-error-text"), opacitySlider: $("opacity-slider"), opacityValue: $("opacity-value"), zoomSlider: $("zoom-slider"), zoomValue: $("zoom-value"), rotationSlider: $("rotation-slider"), rotationValue: $("rotation-value"), positionValue: $("position-value"), fitBtn: $("fit-btn"), lockBtn: $("lock-btn"), resetOverlayBtn: $("reset-overlay-btn"), ghostModeLabel: $("ghost-mode-label"), captureBtn: $("capture-btn"), uploadInput: $("upload-input"), referenceBtn: $("reference-btn"), backHomeBtn: $("back-home-btn"), canvas: $("canvas"), cameraStep: $("camera-step"), cameraPlaceName: $("camera-place-name"), proximityStatus: $("proximity-status"), anchorList: $("anchor-list"),
+  storyGrid: $("story-grid"), routeStops: $("route-stops"), placeCard: $("place-card"), oldPhoto: $("old-photo"), nowPhoto: $("now-photo"), placeIndex: $("place-index"), placeName: $("place-name"), placeCn: $("place-cn"), placeDesc: $("place-desc"), changeFocus: $("change-focus"), shotTip: $("shot-tip"), distanceBadge: $("distance-badge"), navLink: $("nav-link"), remoteBtn: $("remote-btn"), startBtn: $("start-btn"), locateBtn: $("locate-btn"), locationToast: $("location-toast"), tryDemoBtn: $("try-demo-btn"), heroSlider: $("hero-slider"), heroOldWrap: $("hero-old-wrap"), heroHandle: $("hero-handle"), themeOptions: $("theme-options"), walkOptions: $("walk-options"), walkDetail: $("walk-detail"), activeExploreLabel: $("active-explore-label"),
+  camera: $("camera"), cameraContainer: document.querySelector(".camera-container"), overlayPhoto: $("overlay-photo"), cameraPlaceholder: $("camera-placeholder"), cameraError: $("camera-error"), cameraErrorText: $("camera-error-text"), opacitySlider: $("opacity-slider"), opacityValue: $("opacity-value"), zoomSlider: $("zoom-slider"), zoomValue: $("zoom-value"), rotationSlider: $("rotation-slider"), rotationValue: $("rotation-value"), fitBtn: $("fit-btn"), lockBtn: $("lock-btn"), resetOverlayBtn: $("reset-overlay-btn"), ghostModeLabel: $("ghost-mode-label"), segmentationStatus: $("segmentation-status"), captureBtn: $("capture-btn"), uploadInput: $("upload-input"), referenceBtn: $("reference-btn"), backHomeBtn: $("back-home-btn"), canvas: $("canvas"), cameraStep: $("camera-step"), cameraPlaceName: $("camera-place-name"), proximityStatus: $("proximity-status"), anchorList: $("anchor-list"),
   alignBackBtn: $("align-back-btn"), alignPlaceName: $("align-place-name"), pairCount: $("pair-count"), alignStepNumber: $("align-step-number"), alignInstructionTitle: $("align-instruction-title"), alignInstructionCopy: $("align-instruction-copy"), oldPointStage: $("old-point-stage"), newPointStage: $("new-point-stage"), alignOld: $("align-old"), alignNew: $("align-new"), oldPointLayer: $("old-point-layer"), newPointLayer: $("new-point-layer"), undoPointBtn: $("undo-point-btn"), clearPointsBtn: $("clear-points-btn"), alignmentReview: $("alignment-review"), reviewTitle: $("review-title"), alignmentQuality: $("alignment-quality"), alignPreviewNew: $("align-preview-new"), warpCanvas: $("warp-canvas"), alignOpacitySlider: $("align-opacity-slider"), alignOpacityValue: $("align-opacity-value"), skipAlignBtn: $("skip-align-btn"), confirmAlignBtn: $("confirm-align-btn"),
-  previewOld: $("preview-old"), previewNew: $("preview-new"), previewPlaceName: $("preview-place-name"), previewBackBtn: $("preview-back-btn"), retakeBtn: $("retake-btn"), downloadBtn: $("download-btn"), finishBtn: $("finish-btn"), compareSlider: $("compare-slider"), compareOldWrap: $("compare-old-wrap"), compareHandle: $("compare-handle"), resultInsight: $("result-insight"), resultDetail: $("result-detail"), visitedCount: $("visited-count"), savedCount: $("saved-count"), savePlaceBtn: $("save-place-btn"), visitProof: $("visit-proof"), visitPhoto: $("visit-photo"), visitDate: $("visit-date"), collectionDrawer: $("collection-drawer"), collectionList: $("collection-list")
+  previewOld: $("preview-old"), previewNew: $("preview-new"), previewPlaceName: $("preview-place-name"), previewBackBtn: $("preview-back-btn"), retakeBtn: $("retake-btn"), downloadBtn: $("download-btn"), finishBtn: $("finish-btn"), layerStackNote: $("layer-stack-note"), compareSlider: $("compare-slider"), compareOldWrap: $("compare-old-wrap"), compareHandle: $("compare-handle"), resultInsight: $("result-insight"), resultDetail: $("result-detail"), visitedCount: $("visited-count"), savedCount: $("saved-count"), savePlaceBtn: $("save-place-btn"), visitProof: $("visit-proof"), visitPhoto: $("visit-photo"), visitDate: $("visit-date"), collectionDrawer: $("collection-drawer"), collectionList: $("collection-list")
 };
 
 let selectedPlace = places[0], cameraStream = null, userPosition = null, userMarker = null, referenceOnly = false, remoteMode = false, map = null, fieldImageSrc = "";
@@ -70,6 +70,17 @@ let heroCompareMode = "reveal", heroBlinkTimer = null, heroBlinkVisible = true;
 const formatIndex = index => String(index + 1).padStart(2, "0");
 const fieldCredit = () => `${new Date().getFullYear()} · Your field photograph`;
 const featuredPlaces = ["guanqian", "pingjiang", "panmen"].map(id => places.find(place => place.id === id));
+const placeThemes = [
+  { id:"water", name:"水巷与桥", description:"沿河道、桥梁与水岸生活寻找姑苏", ids:["lujia","pingjiang","wuwang","wuyachang","brickbridge","xingzao"] },
+  { id:"streets", name:"街巷生活", description:"看商业街、居民巷与日常空间的变化", ids:["liaojia","guanqian","xuanqiao","shiquan","anchashi"] },
+  { id:"landmarks", name:"城门与地标", description:"寻找城门、寺观、塔楼与公共建筑", ids:["beisi","miluo","xuanmiao","twinpagodas","boxi","wuxianlibrary","panmen","jinmen","xumen"] }
+];
+const curatedRoutes = [
+  { id:"shiquan-water", name:"十全水巷漫步", description:"从十全街走入河巷与桥边生活", distance:"约 1.7 km", duration:"约 40 分钟", ids:["shiquan","wuyachang","xingzao","brickbridge"] },
+  { id:"pingjiang-memory", name:"平江旧影线", description:"从观前街走向平江路，串起寺观与街巷", distance:"约 2.5 km", duration:"约 55 分钟", ids:["guanqian","xuanmiao","miluo","xuanqiao","pingjiang","lujia"] },
+  { id:"city-gates", name:"城门记忆线", description:"沿古城西南边界寻找三座城门", distance:"约 3.8 km", duration:"约 70 分钟", ids:["jinmen","xumen","panmen"] }
+];
+let activeBrowseIds = null, activeCuratedRoute = null, activeThemeId = "all";
 function loadDesktopImages() { if (!window.matchMedia("(min-width: 681px)").matches) return; document.querySelectorAll("img[data-desktop-src]").forEach(image => { if (!image.src) image.src = image.dataset.desktopSrc; }); }
 const onboardingSteps = [
   { icon:"⌖", kicker:"STEP 1 · DISCOVER", title:"Choose a photograph on the map.", copy:"Every thumbnail marks the viewpoint where an archival photograph was taken. Tap one to preview the place and its framing clues." },
@@ -77,6 +88,10 @@ const onboardingSteps = [
   { icon:"✓", kicker:"STEP 3 · COLLECT", title:"Complete the visit and keep the proof.", copy:"Your date and field photograph stay on this device. Revisited places turn green and receive a completion stamp." }
 ];
 let onboardingIndex = 0;
+let cameraFacingMode = "user";
+let selfieSegmenterPromise = null;
+let segmentationResolve = null;
+let segmentationReject = null;
 
 function formatVisitDate(value) { return new Date(value).toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" }); }
 function persistSavedPlaces() { localStorage.setItem("gusu-saved-route", JSON.stringify([...savedPlaces])); }
@@ -130,6 +145,68 @@ function showSavedRoute() {
   closeCollection(); showPage("home"); const bounds = new maplibregl.LngLatBounds(); routePlaces.forEach(place => bounds.extend([place.lng, place.lat])); map.fitBounds(bounds, { padding:{ top:85, right:45, bottom:155, left:45 }, maxZoom:16, duration:650 }); selectPlace(routePlaces[0], false, false); toast(`${routePlaces.length}-stop route shown in saved order.`);
 }
 
+function placesFromIds(ids) { return ids.map(id => places.find(place => place.id === id)).filter(Boolean); }
+function fitDiscoveryPlaces(routePlaces) {
+  if (!map || !routePlaces.length) return;
+  const bounds = new maplibregl.LngLatBounds(); routePlaces.forEach(place => bounds.extend([place.lng, place.lat]));
+  map.fitBounds(bounds, { padding:{ top:90, right:55, bottom:165, left:55 }, maxZoom:15.8, duration:650 });
+}
+function updateCuratedRouteLine() {
+  if (!map?.getSource("curated-route")) return;
+  const routePlaces = activeCuratedRoute ? placesFromIds(activeCuratedRoute.ids) : [];
+  const features = routePlaces.length > 1 ? [{ type:"Feature", geometry:{ type:"LineString", coordinates:routePlaces.map(place => [place.lng, place.lat]) } }] : [];
+  map.getSource("curated-route").setData({ type:"FeatureCollection", features });
+}
+function updateExploreLabel(label) {
+  el.activeExploreLabel.textContent = label || "";
+  el.activeExploreLabel.classList.toggle("hidden", !label);
+}
+function applyDiscoverySelection(ids, label, route = null) {
+  activeBrowseIds = ids ? new Set(ids) : null; activeCuratedRoute = route;
+  updateMarkerVisuals(); updateCuratedRouteLine(); updateExploreLabel(label);
+  const selected = ids ? placesFromIds(ids) : places;
+  if (selected.length) { selectPlace(selected[0], false, false); fitDiscoveryPlaces(selected); }
+}
+function setDiscoveryMode(mode) {
+  const themesActive = mode === "themes";
+  $("themes-tab").classList.toggle("is-active", themesActive); $("walks-tab").classList.toggle("is-active", !themesActive);
+  $("themes-tab").setAttribute("aria-selected", themesActive); $("walks-tab").setAttribute("aria-selected", !themesActive);
+  $("themes-panel").classList.toggle("hidden", !themesActive); $("walks-panel").classList.toggle("hidden", themesActive);
+  if (themesActive) {
+    el.walkDetail.classList.add("hidden"); document.querySelectorAll(".walk-card").forEach(card => card.classList.remove("is-active"));
+    const theme = placeThemes.find(item => item.id === activeThemeId); applyDiscoverySelection(theme?.ids || null, theme ? `主题 · ${theme.name}` : "");
+  } else if (activeCuratedRoute) {
+    applyDiscoverySelection(activeCuratedRoute.ids, `路线 · ${activeCuratedRoute.name}`, activeCuratedRoute);
+  } else {
+    applyDiscoverySelection(null, "");
+  }
+}
+function selectTheme(themeId) {
+  activeThemeId = themeId; activeCuratedRoute = null;
+  document.querySelectorAll(".theme-chip").forEach(button => button.classList.toggle("is-active", button.dataset.themeId === themeId));
+  const theme = placeThemes.find(item => item.id === themeId); applyDiscoverySelection(theme?.ids || null, theme ? `主题 · ${theme.name}` : "");
+}
+function renderWalkDetail(route) {
+  const routePlaces = placesFromIds(route.ids);
+  el.walkDetail.innerHTML = `<div class="walk-detail-head"><div><strong>${route.name}</strong><small>${route.description} · ${route.distance} · ${route.duration}</small></div><button id="start-curated-route" type="button">从第 1 站开始 →</button></div><div class="walk-sequence">${routePlaces.map((place,index) => `${index ? '<i class="walk-arrow">→</i>' : ''}<button class="walk-stop" type="button" data-id="${place.id}"><b>${index + 1}</b>${place.cn.split("·")[0]}</button>`).join("")}</div>`;
+  el.walkDetail.classList.remove("hidden");
+  el.walkDetail.querySelectorAll(".walk-stop").forEach(button => button.addEventListener("click", () => selectPlace(places.find(place => place.id === button.dataset.id), true)));
+  $("start-curated-route").addEventListener("click", () => { selectPlace(routePlaces[0], true); toast(`${route.name}：第 1 站 ${routePlaces[0].cn}`); });
+}
+function selectCuratedRoute(routeId) {
+  const route = curatedRoutes.find(item => item.id === routeId); if (!route) return;
+  activeCuratedRoute = route; activeBrowseIds = new Set(route.ids);
+  document.querySelectorAll(".walk-card").forEach(card => card.classList.toggle("is-active", card.dataset.routeId === routeId));
+  renderWalkDetail(route); applyDiscoverySelection(route.ids, `路线 · ${route.name}`, route);
+}
+function renderDiscoveryBrowser() {
+  el.themeOptions.innerHTML = `<button class="theme-chip is-active" type="button" data-theme-id="all"><strong>全部点位</strong><small>浏览古城中的全部历史影像</small><em>${places.length} 个地点</em></button>${placeThemes.map(theme => `<button class="theme-chip" type="button" data-theme-id="${theme.id}"><strong>${theme.name}</strong><small>${theme.description}</small><em>${theme.ids.length} 个地点</em></button>`).join("")}`;
+  el.walkOptions.innerHTML = curatedRoutes.map(route => `<button class="walk-card" type="button" data-route-id="${route.id}"><strong>${route.name}</strong><small>${route.description}</small><span class="walk-meta"><i>${route.ids.length} 站</i><i>${route.distance}</i><i>${route.duration}</i></span></button>`).join("");
+  el.themeOptions.querySelectorAll(".theme-chip").forEach(button => button.addEventListener("click", () => selectTheme(button.dataset.themeId)));
+  el.walkOptions.querySelectorAll(".walk-card").forEach(button => button.addEventListener("click", () => selectCuratedRoute(button.dataset.routeId)));
+  $("themes-tab").addEventListener("click", () => setDiscoveryMode("themes")); $("walks-tab").addEventListener("click", () => setDiscoveryMode("walks"));
+}
+
 function setCompare(value, wrap, handle) { wrap.style.clipPath = `inset(0 ${100 - value}% 0 0)`; handle.style.left = `${value}%`; }
 function stopBlinkComparison() { if (blinkTimer) clearInterval(blinkTimer); blinkTimer = null; blinkVisible = true; if (el.compareOldWrap) el.compareOldWrap.style.opacity = 1; const button = $("blink-toggle"); if (button) button.textContent = "Play flashback"; }
 function startBlinkComparison() { stopBlinkComparison(); $("blink-toggle").textContent = "Pause flashback"; blinkTimer = setInterval(() => { blinkVisible = !blinkVisible; el.compareOldWrap.style.opacity = blinkVisible ? 1 : 0; }, 720); }
@@ -181,7 +258,7 @@ function buildStories() {
 function buildRouteStops() {
   const card = document.createElement("article");
   card.className = "route-stop map-selection-card";
-  card.innerHTML = `<button class="route-stop-main" type="button"><span class="route-thumb"><img alt=""><i class="route-stamp">DONE</i></span><span class="route-stop-copy"><small class="route-status"></small><strong></strong><span class="route-name-cn"></span><span class="route-credit"></span><span class="route-visit-date"></span></span></button><div class="route-stop-actions"><button class="route-save" type="button" aria-label="Save this place">♡</button><button class="route-preview" type="button">Compare</button><button class="route-capture" type="button">Camera</button></div>`;
+  card.innerHTML = `<button class="route-stop-main" type="button"><span class="route-thumb"><img alt=""><i class="route-stamp">DONE</i></span><span class="route-stop-copy"><small class="route-status"></small><strong></strong><span class="route-name-cn"></span><span class="route-credit"></span><span class="route-visit-date"></span></span></button><div class="route-stop-actions"><button class="route-save" type="button" aria-label="Save this place">♡</button><button class="route-preview" type="button">看古今</button><button class="route-capture" type="button">合影打卡</button></div>`;
   card.querySelector(".route-stop-main").addEventListener("click", () => selectPlace(selectedPlace, true));
   card.querySelector(".route-preview").addEventListener("click", () => openRemote(selectedPlace));
   card.querySelector(".route-capture").addEventListener("click", () => startField());
@@ -223,9 +300,12 @@ function updateMarkerVisuals() {
     if (!marker) return;
     const node = marker.getElement();
     const isVisited = visited.has(place.id);
+    const curatedIndex = activeCuratedRoute ? activeCuratedRoute.ids.indexOf(place.id) : -1;
     node.classList.toggle("is-active", place.id === selectedPlace.id);
     node.classList.toggle("is-visited", isVisited);
-    node.querySelector(".photo-pin-badge").textContent = isVisited ? "✓" : "";
+    node.classList.toggle("is-filtered-out", Boolean(activeBrowseIds) && !activeBrowseIds.has(place.id));
+    node.classList.toggle("is-curated-stop", curatedIndex >= 0);
+    node.querySelector(".photo-pin-badge").textContent = curatedIndex >= 0 ? String(curatedIndex + 1) : (isVisited ? "✓" : "");
     node.setAttribute("aria-label", `${place.name}, archival photograph, ${place.oldCredit}, ${isVisited ? "visited" : "not visited"}`);
   });
 }function initMap() {
@@ -251,7 +331,11 @@ function updateMarkerVisuals() {
     map.addSource("saved-route", { type:"geojson", data:{ type:"Feature", geometry:{ type:"LineString", coordinates:[] } } });
     map.addLayer({ id:"saved-route-halo", type:"line", source:"saved-route", paint:{ "line-color":"#fffaf0", "line-width":7, "line-opacity":.9 } });
     map.addLayer({ id:"saved-route-line", type:"line", source:"saved-route", paint:{ "line-color":"#a54b38", "line-width":3, "line-dasharray":[1.2,1.2] } });
+    map.addSource("curated-route", { type:"geojson", data:{ type:"FeatureCollection", features:[] } });
+    map.addLayer({ id:"curated-route-halo", type:"line", source:"curated-route", paint:{ "line-color":"#fffaf0", "line-width":9, "line-opacity":.92 } });
+    map.addLayer({ id:"curated-route-line", type:"line", source:"curated-route", paint:{ "line-color":"#173f34", "line-width":5, "line-opacity":.95 } });
     updateRouteLine();
+    updateCuratedRouteLine();
   });
   map.on("zoom", updateMarkerScale);
   places.forEach((place, index) => {
@@ -304,25 +388,88 @@ function locateUser() {
 }
 function resetLocate(success = false) { el.locateBtn.disabled = false; el.locateBtn.classList.toggle("is-located", success); el.locateBtn.innerHTML = success ? "<span>✓</span> Located" : "<span>⌖</span> Locate me"; if (success) resetLocate.timer = setTimeout(() => resetLocate(false), 2400); }
 
-function applyOverlayTransform() { el.overlayPhoto.style.transform = `translate3d(${overlayState.x}px,${overlayState.y}px,0) rotate(${overlayState.rotation}deg) scale(${overlayState.scale})`; el.overlayPhoto.style.objectFit = overlayState.fit; el.zoomSlider.value = Math.round(overlayState.scale * 100); el.rotationSlider.value = overlayState.rotation; el.zoomValue.value = `${Math.round(overlayState.scale * 100)}%`; el.rotationValue.value = `${Number(overlayState.rotation).toFixed(overlayState.rotation % 1 ? 1 : 0)}°`; const x = Math.round(overlayState.x), y = Math.round(overlayState.y); el.positionValue.value = Math.abs(x) < 1 && Math.abs(y) < 1 ? "Centred" : `${x > 0 ? "+" : ""}${x}, ${y > 0 ? "+" : ""}${y}`; el.fitBtn.textContent = overlayState.fit === "cover" ? "Contain" : "Cover"; el.lockBtn.textContent = overlayState.locked ? "Unlock ghost" : "Lock ghost"; el.lockBtn.classList.toggle("is-active", overlayState.locked); el.cameraContainer.classList.toggle("is-locked", overlayState.locked); el.ghostModeLabel.textContent = overlayState.locked ? "GHOST LOCKED" : "GHOST UNLOCKED · DRAG TO POSITION"; }
+function applyOverlayTransform() { el.overlayPhoto.style.transform = `translate3d(${overlayState.x}px,${overlayState.y}px,0) rotate(${overlayState.rotation}deg) scale(${overlayState.scale})`; el.overlayPhoto.style.objectFit = overlayState.fit; el.zoomSlider.value = Math.round(overlayState.scale * 100); el.rotationSlider.value = overlayState.rotation; el.zoomValue.value = `${Math.round(overlayState.scale * 100)}%`; el.rotationValue.value = `${Number(overlayState.rotation).toFixed(overlayState.rotation % 1 ? 1 : 0)}°`; el.fitBtn.textContent = overlayState.fit === "cover" ? "完整显示" : "铺满画面"; el.lockBtn.textContent = overlayState.locked ? "解锁旧影" : "锁定旧影"; el.lockBtn.classList.toggle("is-active", overlayState.locked); el.cameraContainer.classList.toggle("is-locked", overlayState.locked); el.ghostModeLabel.textContent = overlayState.locked ? "旧影已锁定" : "旧影可移动 · 拖动调整位置"; }
 function resetOverlay() { Object.assign(overlayState, { x: 0, y: 0, scale: 1, rotation: 0, fit: "cover", locked: false }); applyOverlayTransform(); }
 function setOpacity(value) { const numeric = Number(value); el.overlayPhoto.style.opacity = referenceOnly ? 1 : numeric; el.opacityValue.value = `${Math.round(numeric * 100)}%`; }
 const pointerDistance = points => Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
 const pointerAngle = points => Math.atan2(points[1].y - points[0].y, points[1].x - points[0].x) * 180 / Math.PI;
 const pointerCenter = points => ({ x: (points[0].x + points[1].x) / 2, y: (points[0].y + points[1].y) / 2 });
-function handleOverlayPointerDown(event) { if (overlayState.locked || (event.pointerType === "mouse" && event.button !== 0)) return; event.preventDefault(); try { el.cameraContainer.setPointerCapture?.(event.pointerId); } catch {} activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY, lastX: event.clientX, lastY: event.clientY }); el.cameraContainer.classList.add("is-dragging"); if (activePointers.size === 2) { const points = [...activePointers.values()]; pinchStart = { distance: pointerDistance(points), angle: pointerAngle(points), center: pointerCenter(points), scale: overlayState.scale, rotation: overlayState.rotation, x: overlayState.x, y: overlayState.y }; } }
-function handleOverlayPointerMove(event) { if (!activePointers.has(event.pointerId) || overlayState.locked) return; event.preventDefault(); const point = activePointers.get(event.pointerId); point.x = event.clientX; point.y = event.clientY; if (activePointers.size === 1) { overlayState.x += point.x - point.lastX; overlayState.y += point.y - point.lastY; } else if (activePointers.size === 2 && pinchStart) { const points = [...activePointers.values()], center = pointerCenter(points); overlayState.scale = Math.min(2.2, Math.max(.5, pinchStart.scale * pointerDistance(points) / Math.max(1, pinchStart.distance))); overlayState.rotation = Math.min(20, Math.max(-20, pinchStart.rotation + pointerAngle(points) - pinchStart.angle)); overlayState.x = pinchStart.x + center.x - pinchStart.center.x; overlayState.y = pinchStart.y + center.y - pinchStart.center.y; } point.lastX = point.x; point.lastY = point.y; applyOverlayTransform(); }
-function handleOverlayPointerEnd(event) { activePointers.delete(event.pointerId); try { if (el.cameraContainer.hasPointerCapture?.(event.pointerId)) el.cameraContainer.releasePointerCapture(event.pointerId); } catch {} pinchStart = null; if (!activePointers.size) el.cameraContainer.classList.remove("is-dragging"); if (activePointers.size === 1) { const point = [...activePointers.values()][0]; point.lastX = point.x; point.lastY = point.y; } }
+function handleOverlayPointerDown(event) { if (overlayState.locked) return; el.cameraContainer.setPointerCapture?.(event.pointerId); activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY, lastX: event.clientX, lastY: event.clientY }); el.cameraContainer.classList.add("is-dragging"); if (activePointers.size === 2) { const points = [...activePointers.values()]; pinchStart = { distance: pointerDistance(points), angle: pointerAngle(points), center: pointerCenter(points), scale: overlayState.scale, rotation: overlayState.rotation, x: overlayState.x, y: overlayState.y }; } }
+function handleOverlayPointerMove(event) { if (!activePointers.has(event.pointerId) || overlayState.locked) return; const point = activePointers.get(event.pointerId); point.x = event.clientX; point.y = event.clientY; if (activePointers.size === 1) { overlayState.x += point.x - point.lastX; overlayState.y += point.y - point.lastY; } else if (activePointers.size === 2 && pinchStart) { const points = [...activePointers.values()], center = pointerCenter(points); overlayState.scale = Math.min(2.2, Math.max(.5, pinchStart.scale * pointerDistance(points) / Math.max(1, pinchStart.distance))); overlayState.rotation = Math.min(20, Math.max(-20, pinchStart.rotation + pointerAngle(points) - pinchStart.angle)); overlayState.x = pinchStart.x + center.x - pinchStart.center.x; overlayState.y = pinchStart.y + center.y - pinchStart.center.y; } point.lastX = point.x; point.lastY = point.y; applyOverlayTransform(); }
+function handleOverlayPointerEnd(event) { activePointers.delete(event.pointerId); pinchStart = null; if (!activePointers.size) el.cameraContainer.classList.remove("is-dragging"); if (activePointers.size === 1) { const point = [...activePointers.values()][0]; point.lastX = point.x; point.lastY = point.y; } }
 
-function prepareResult(place, newImage, isRemote, alignedOld = place.oldPhoto) { selectedPlace = place; remoteMode = isRemote; const currentCredit = isRemote ? place.nowCredit : fieldCredit(); el.previewOld.src = alignedOld; el.previewNew.src = newImage; el.previewPlaceName.textContent = `${place.name} · ${place.cn}`; el.resultInsight.textContent = place.insight; el.resultDetail.textContent = place.detail; $("preview-old-credit").textContent = place.oldCredit; $("preview-new-credit").textContent = currentCredit; $("compare-old-year").textContent = place.oldCredit.split("·")[0].trim(); $("compare-new-year").textContent = currentCredit.split("·")[0].trim(); $("source-note").textContent = `Archive: ${place.oldCredit}. Present: ${currentCredit}. Supplied modern rephotographs © 古城阳面; HER Lab teaching and student graduation work only.`; el.compareSlider.value = 50; setCompareMode("reveal"); el.retakeBtn.textContent = isRemote ? "Choose another story" : "Retake photograph"; el.finishBtn.textContent = isRemote ? (savedPlaces.has(place.id) ? "♥ Saved to route" : "♡ Save to route") : "Complete visit & collect stamp"; stopCamera(); showPage("preview"); }
+function prepareResult(place, newImage, isRemote, alignedOld = place.oldPhoto, isLayered = false) { selectedPlace = place; remoteMode = isRemote; const currentCredit = isRemote ? place.nowCredit : fieldCredit(); el.previewOld.src = alignedOld; el.previewNew.src = newImage; el.previewPlaceName.textContent = `${place.name} · ${place.cn}`; el.resultInsight.textContent = place.insight; el.resultDetail.textContent = place.detail; el.layerStackNote.classList.toggle("hidden", !isLayered); $("preview-title").textContent = isRemote ? "一处地点，两段时光。" : (isLayered ? "三层古今合影完成。" : "我在姑苏，遇见过去。"); el.downloadBtn.textContent = isRemote ? "下载对比明信片 ↓" : "下载古今纪念卡 ↓"; $("preview-old-credit").textContent = place.oldCredit; $("preview-new-credit").textContent = currentCredit; $("compare-old-year").textContent = place.oldCredit.split("·")[0].trim(); $("compare-new-year").textContent = currentCredit.split("·")[0].trim(); $("source-note").textContent = `Archive: ${place.oldCredit}. Present: ${currentCredit}. Supplied modern rephotographs © 古城阳面; HER Lab teaching and student graduation work only.`; el.compareSlider.value = 50; setCompareMode("reveal"); el.retakeBtn.textContent = isRemote ? "选择另一个故事" : "重新拍摄"; el.finishBtn.textContent = isRemote ? (savedPlaces.has(place.id) ? "♥ 已加入路线" : "♡ 加入漫步路线") : "完成打卡并收集印章"; stopCamera(); showPage("preview"); }
 function openRemote(place) { prepareResult(place, place.nowPhoto, true, place.oldPhoto); }
-async function startField() { remoteMode = false; fieldImageSrc = ""; el.cameraStep.textContent = `VIEWPOINT ${formatIndex(places.indexOf(selectedPlace))} · ON-SITE COMPARISON`; el.cameraPlaceName.textContent = `${selectedPlace.name} · ${selectedPlace.cn}`; el.overlayPhoto.src = selectedPlace.oldPhoto; $("camera-credit").textContent = selectedPlace.oldCredit; el.anchorList.innerHTML = selectedPlace.anchors.map((anchor, index) => `<li><b>${index + 1}</b> ${anchor}</li>`).join(""); el.opacitySlider.value = .5; referenceOnly = false; el.referenceBtn.textContent = "View archive"; resetOverlay(); setOpacity(.5); updateDistance(); showPage("camera"); await startCamera(); }
-async function startCamera() { stopCamera(); el.cameraError.classList.add("hidden"); el.cameraPlaceholder.classList.remove("hidden"); el.cameraPlaceholder.querySelector("strong").textContent = "Opening the camera"; el.cameraPlaceholder.querySelector("p").textContent = "Allow access to your rear camera"; if (!navigator.mediaDevices?.getUserMedia) { showCameraError("Live camera access is not supported. Choose a photograph below to continue."); return; } try { cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1280 } }, audio: false }); el.camera.srcObject = cameraStream; await el.camera.play(); el.cameraPlaceholder.classList.add("hidden"); } catch (error) { showCameraError(error.name === "NotAllowedError" ? "Camera permission is off. Allow it in browser settings, or choose a photograph instead." : "The camera could not be opened. Choose a photograph instead."); } }
+async function startField() { remoteMode = false; fieldImageSrc = ""; cameraFacingMode = "user"; el.cameraStep.textContent = `点位 ${formatIndex(places.indexOf(selectedPlace))} · 古今合影打卡`; el.cameraPlaceName.textContent = `${selectedPlace.name} · ${selectedPlace.cn}`; el.overlayPhoto.src = selectedPlace.oldPhoto; $("camera-credit").textContent = selectedPlace.oldCredit; el.anchorList.innerHTML = selectedPlace.anchors.map((anchor, index) => `<li><b>${index + 1}</b> ${anchor}</li>`).join(""); el.opacitySlider.value = .35; referenceOnly = false; el.referenceBtn.textContent = "切换到后置镜头"; resetOverlay(); setOpacity(.35); updateDistance(); showPage("camera"); await startCamera(); }
+async function startCamera() { stopCamera(); el.camera.classList.toggle("is-selfie", cameraFacingMode === "user"); el.cameraError.classList.add("hidden"); el.cameraPlaceholder.classList.remove("hidden"); el.cameraPlaceholder.querySelector("strong").textContent = "正在打开相机"; el.cameraPlaceholder.querySelector("p").textContent = cameraFacingMode === "user" ? "把自己和街景一起放进画面" : "对准旧照片中的街景位置"; if (!navigator.mediaDevices?.getUserMedia) { showCameraError("当前浏览器无法直接使用相机，请从相册选择一张照片继续。"); return; } try { cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: cameraFacingMode }, width: { ideal: 1920 }, height: { ideal: 1280 } }, audio: false }); el.camera.srcObject = cameraStream; await el.camera.play(); el.cameraPlaceholder.classList.add("hidden"); } catch (error) { showCameraError(error.name === "NotAllowedError" ? "相机权限尚未开启，请在浏览器设置中允许，或从相册选择照片。" : "无法打开相机，请从相册选择照片继续。"); } }
 function showCameraError(message) { el.cameraErrorText.textContent = message; el.cameraError.classList.remove("hidden"); el.cameraPlaceholder.querySelector("strong").textContent = "Continue with a photo"; el.cameraPlaceholder.querySelector("p").textContent = "Your image never leaves this device"; }
 function stopCamera() { cameraStream?.getTracks().forEach(track => track.stop()); cameraStream = null; el.camera.srcObject = null; }
-function capturePhoto() { if (!el.camera.videoWidth) { showCameraError("The camera is not ready. Wait a moment, or choose a photograph instead."); return; } const canvas = el.canvas, context = canvas.getContext("2d"); canvas.width = el.camera.videoWidth; canvas.height = el.camera.videoHeight; context.drawImage(el.camera, 0, 0, canvas.width, canvas.height); startAlignment(canvas.toDataURL("image/jpeg", .92)); }
-function handleUpload(event) { const file = event.target.files?.[0]; if (!file?.type.startsWith("image/")) return; const reader = new FileReader(); reader.onload = () => startAlignment(reader.result); reader.readAsDataURL(file); event.target.value = ""; }
+async function capturePhoto() { if (!el.camera.videoWidth) { showCameraError("相机还没有准备好，请稍等片刻或选择已有照片。"); return; } const canvas = el.canvas, context = canvas.getContext("2d"); canvas.width = el.camera.videoWidth; canvas.height = el.camera.videoHeight; if (cameraFacingMode === "user") { context.translate(canvas.width, 0); context.scale(-1, 1); } context.drawImage(el.camera, 0, 0, canvas.width, canvas.height); const captured = canvas.toDataURL("image/jpeg", .92); if (cameraFacingMode === "user") await createLayeredCheckin(captured); else startAlignment(captured); }
+function handleUpload(event) { const file = event.target.files?.[0]; if (!file?.type.startsWith("image/")) return; const reader = new FileReader(); reader.onload = async () => { if (cameraFacingMode === "user") await createLayeredCheckin(reader.result); else startAlignment(reader.result); }; reader.readAsDataURL(file); event.target.value = ""; }
 function loadImage(src) { return new Promise((resolve, reject) => { const image = new Image(); image.onload = () => resolve(image); image.onerror = reject; image.src = src; }); }
+
+const SELFIE_SEGMENTATION_VERSION = "0.1.1675465747";
+const SELFIE_SEGMENTATION_BASE = `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@${SELFIE_SEGMENTATION_VERSION}`;
+function loadExternalScript(src) { return new Promise((resolve, reject) => { const existing = document.querySelector(`script[src="${src}"]`); if (existing?.dataset.ready === "1") return resolve(); const script = existing || document.createElement("script"); const timeout = setTimeout(() => reject(new Error("人物分割组件加载超时")), 20000); script.src = src; script.crossOrigin = "anonymous"; script.onload = () => { clearTimeout(timeout); script.dataset.ready = "1"; resolve(); }; script.onerror = () => { clearTimeout(timeout); reject(new Error("人物分割组件加载失败")); }; if (!existing) document.head.appendChild(script); }); }
+async function getSelfieSegmenter() {
+  if (!selfieSegmenterPromise) selfieSegmenterPromise = (async () => {
+    await loadExternalScript(`${SELFIE_SEGMENTATION_BASE}/selfie_segmentation.js`);
+    if (!window.SelfieSegmentation) throw new Error("当前浏览器无法启动人物分割模型");
+    const segmenter = new window.SelfieSegmentation({ locateFile: file => `${SELFIE_SEGMENTATION_BASE}/${file}` });
+    segmenter.setOptions({ modelSelection: 1, selfieMode: false });
+    segmenter.onResults(results => { if (!segmentationResolve) return; const resolve = segmentationResolve; segmentationResolve = null; segmentationReject = null; resolve(results); });
+    return segmenter;
+  })();
+  return selfieSegmenterPromise;
+}
+async function extractPersonCutout(sourceCanvas) {
+  const segmenter = await getSelfieSegmenter();
+  const results = await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => { segmentationResolve = null; segmentationReject = null; reject(new Error("人物识别超时，请换一张人物更清晰的照片")); }, 18000);
+    segmentationResolve = value => { clearTimeout(timeout); resolve(value); };
+    segmentationReject = error => { clearTimeout(timeout); reject(error); };
+    segmenter.send({ image: sourceCanvas }).catch(error => { const fail = segmentationReject; segmentationResolve = null; segmentationReject = null; fail?.(error); });
+  });
+  if (!results.segmentationMask) throw new Error("没有识别到清晰的人物");
+  const cutout = document.createElement("canvas"), context = cutout.getContext("2d");
+  cutout.width = sourceCanvas.width; cutout.height = sourceCanvas.height;
+  context.drawImage(results.segmentationMask, 0, 0, cutout.width, cutout.height);
+  context.globalCompositeOperation = "source-in";
+  context.drawImage(sourceCanvas, 0, 0, cutout.width, cutout.height);
+  context.globalCompositeOperation = "source-over";
+  return cutout.toDataURL("image/png");
+}
+async function composeThreeLayers(personCutoutSrc) {
+  const [presentImage, archiveImage, personImage] = await Promise.all([loadImage(selectedPlace.nowPhoto), loadImage(selectedPlace.oldPhoto), loadImage(personCutoutSrc)]);
+  const composite = document.createElement("canvas"), context = composite.getContext("2d");
+  composite.width = 1200; composite.height = 900;
+  drawCover(context, presentImage, 0, 0, composite.width, composite.height);
+  const cameraRect = el.cameraContainer.getBoundingClientRect(), offsetScaleX = composite.width / Math.max(1, cameraRect.width), offsetScaleY = composite.height / Math.max(1, cameraRect.height);
+  context.save(); context.globalAlpha = Number(el.opacitySlider.value); context.globalCompositeOperation = "multiply"; context.translate(composite.width / 2 + overlayState.x * offsetScaleX, composite.height / 2 + overlayState.y * offsetScaleY); context.rotate(overlayState.rotation * Math.PI / 180); context.scale(overlayState.scale, overlayState.scale); drawCover(context, archiveImage, -composite.width / 2, -composite.height / 2, composite.width, composite.height); context.restore();
+  context.save(); context.fillStyle = "rgba(242,239,231,.10)"; context.fillRect(0,0,composite.width,composite.height); context.restore();
+  drawCover(context, personImage, 0, 0, composite.width, composite.height);
+  const vignette = context.createLinearGradient(0, 610, 0, 900); vignette.addColorStop(0,"rgba(11,24,19,0)"); vignette.addColorStop(1,"rgba(11,24,19,.48)"); context.fillStyle = vignette; context.fillRect(0,560,1200,340);
+  context.fillStyle = "rgba(255,255,255,.92)"; context.font = "700 18px Microsoft YaHei, Arial"; context.fillText("古今合影打卡", 38, 832);
+  context.font = "700 34px Microsoft YaHei, Georgia"; context.fillText(selectedPlace.cn, 38, 873);
+  context.textAlign = "right"; context.font = "700 15px Arial"; context.fillText("GUSU · PAST & PRESENT", 1162, 848); context.font = "15px Microsoft YaHei, Arial"; context.fillText(`${selectedPlace.oldCredit.split("·")[0].trim()} × ${new Date().getFullYear()}`, 1162, 875); context.textAlign = "left";
+  return composite.toDataURL("image/jpeg", .94);
+}
+async function createLayeredCheckin(source) {
+  el.captureBtn.disabled = true; el.referenceBtn.disabled = true; el.segmentationStatus.classList.remove("hidden");
+  try {
+    const image = await loadImage(source), scale = Math.min(1, 1280 / Math.max(image.width, image.height)), input = document.createElement("canvas"), context = input.getContext("2d");
+    input.width = Math.max(1, Math.round(image.width * scale)); input.height = Math.max(1, Math.round(image.height * scale)); context.drawImage(image, 0, 0, input.width, input.height);
+    const cutout = await extractPersonCutout(input), composite = await composeThreeLayers(cutout);
+    fieldImageSrc = composite;
+    prepareResult(selectedPlace, composite, false, selectedPlace.oldPhoto, true);
+    el.resultInsight.textContent = "当代街景、历史旧影与你的身影已经合成在同一画面中。";
+    el.resultDetail.textContent = "滑动查看原始旧影与三层合影；下载纪念卡后，照片仍只保存在你的设备中。";
+  } catch (error) {
+    showCameraError(`${error.message || "自动抠图失败"}。你可以换一张人物轮廓更清晰、光线更均匀的照片重试。`);
+  } finally {
+    el.segmentationStatus.classList.add("hidden"); el.captureBtn.disabled = false; el.referenceBtn.disabled = false;
+  }
+}
 
 async function startAlignment(newImageSrc) { stopCamera(); fieldImageSrc = newImageSrc; alignment.pairs = []; alignment.pending = null; alignment.homography = null; el.alignOld.src = selectedPlace.oldPhoto; el.alignNew.src = newImageSrc; el.alignPreviewNew.src = newImageSrc; el.alignPlaceName.textContent = `${selectedPlace.name} · ${selectedPlace.cn}`; $("align-old-credit").textContent = selectedPlace.oldCredit; $("align-new-credit").textContent = fieldCredit(); $("warp-old-credit").textContent = selectedPlace.oldCredit; $("warp-new-credit").textContent = fieldCredit(); resetWarpCanvas(); showPage("align"); try { [alignment.oldImage, alignment.newImage] = await Promise.all([loadImage(selectedPlace.oldPhoto), loadImage(newImageSrc)]); updateAlignmentUI(); } catch { el.alignInstructionTitle.textContent = "One of the photographs could not be loaded."; el.alignInstructionCopy.textContent = "Return to the camera and try another photograph."; } }
 function imageDisplayBox(stage, image) { const rect = stage.getBoundingClientRect(), naturalWidth = image.naturalWidth || image.width, naturalHeight = image.naturalHeight || image.height, scale = Math.min(rect.width / naturalWidth, rect.height / naturalHeight), width = naturalWidth * scale, height = naturalHeight * scale; return { rect, width, height, left: (rect.width - width) / 2, top: (rect.height - height) / 2 }; }
@@ -361,7 +508,50 @@ function clearPoints() { alignment.pairs = []; alignment.pending = null; updateA
 function confirmAlignment() { if (!alignment.homography) return; let alignedOld; try { alignedOld = el.warpCanvas.toDataURL("image/png"); } catch { alignedOld = selectedPlace.oldPhoto; } prepareResult(selectedPlace, fieldImageSrc, false, alignedOld); }
 
 function drawCover(context, image, x, y, width, height) { const scale = Math.max(width / image.width, height / image.height), sourceWidth = width / scale, sourceHeight = height / scale, sourceX = (image.width - sourceWidth) / 2, sourceY = (image.height - sourceHeight) / 2; context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height); }
-async function downloadPostcard() { const original = el.downloadBtn.textContent; el.downloadBtn.disabled = true; el.downloadBtn.textContent = "Preparing…"; try { const [oldImage,newImage] = await Promise.all([loadImage(el.previewOld.src),loadImage(el.previewNew.src)]), canvas = document.createElement("canvas"), context = canvas.getContext("2d"), currentCredit = remoteMode ? selectedPlace.nowCredit : fieldCredit(); canvas.width = 1600; canvas.height = 1000; context.fillStyle = "#f2efe7"; context.fillRect(0,0,canvas.width,canvas.height); drawCover(context,oldImage,70,70,710,650); drawCover(context,newImage,820,70,710,650); context.fillStyle = "#17231f"; context.font = "700 24px Arial"; context.fillText("ALIGNED ARCHIVE",70,758); context.fillText("PRESENT",820,758); context.fillStyle = "#66716b"; context.font = "18px Microsoft YaHei, Arial"; context.fillText(selectedPlace.oldCredit,70,790); context.fillText(currentCredit,820,790); context.fillStyle = "#a54b38"; context.font = "700 22px Arial"; context.fillText("GUSU, PAST & PRESENT",70,845); context.fillStyle = "#17231f"; context.font = "700 48px Georgia"; context.fillText(selectedPlace.name,70,905); context.fillStyle = "#66716b"; context.font = "23px Microsoft YaHei, Arial"; context.fillText(selectedPlace.cn,70,945); context.textAlign = "right"; context.font = "20px Arial"; context.fillText("One corner · Two moments",1530,905); context.fillText(new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"}),1530,945); context.textAlign = "left"; canvas.toBlob(blob => { const url = URL.createObjectURL(blob), link = document.createElement("a"); link.href = url; link.download = `gusu-${selectedPlace.id}-postcard.png`; link.click(); setTimeout(() => URL.revokeObjectURL(url),1000); },"image/png"); } catch { alert("The postcard could not be created. Please try again."); } finally { el.downloadBtn.disabled = false; el.downloadBtn.textContent = original; } }
+async function downloadPostcard() {
+  const original = el.downloadBtn.textContent;
+  el.downloadBtn.disabled = true;
+  el.downloadBtn.textContent = "正在生成纪念卡…";
+  try {
+    const [oldImage, newImage] = await Promise.all([loadImage(el.previewOld.src), loadImage(el.previewNew.src)]);
+    const canvas = document.createElement("canvas"), context = canvas.getContext("2d"), currentCredit = remoteMode ? selectedPlace.nowCredit : fieldCredit();
+    canvas.width = 1600; canvas.height = 1000;
+    if (!remoteMode) {
+      drawCover(context, newImage, 0, 0, canvas.width, canvas.height);
+      const shade = context.createLinearGradient(0, 450, 0, 1000);
+      shade.addColorStop(0, "rgba(12,22,18,0)"); shade.addColorStop(1, "rgba(12,22,18,.88)");
+      context.fillStyle = shade; context.fillRect(0, 400, 1600, 600);
+      context.fillStyle = "#f2efe7"; context.fillRect(64, 64, 552, 392);
+      drawCover(context, oldImage, 76, 76, 528, 340);
+      context.fillStyle = "#a54b38"; context.fillRect(76, 416, 528, 28);
+      context.fillStyle = "white"; context.font = "700 15px Microsoft YaHei, Arial";
+      context.fillText(`旧影 · ${selectedPlace.oldCredit}`, 92, 436);
+      context.fillStyle = "white"; context.font = "700 27px Microsoft YaHei, Arial";
+      context.fillText("古今合影打卡", 70, 770);
+      context.font = "700 66px Microsoft YaHei, Georgia";
+      context.fillText(selectedPlace.cn, 70, 850);
+      context.font = "600 29px Microsoft YaHei, Arial";
+      context.fillText(selectedPlace.name, 70, 900);
+      context.fillStyle = "rgba(255,255,255,.72)"; context.font = "22px Microsoft YaHei, Arial";
+      context.fillText(`拍摄于 ${new Date().toLocaleDateString("zh-CN", { year:"numeric", month:"long", day:"numeric" })}`, 70, 944);
+      context.textAlign = "right"; context.font = "700 22px Arial";
+      context.fillText("GUSU · PAST & PRESENT", 1530, 900);
+      context.font = "18px Microsoft YaHei, Arial"; context.fillText("我在姑苏，遇见过去", 1530, 944);
+      context.textAlign = "left";
+    } else {
+      context.fillStyle = "#f2efe7"; context.fillRect(0,0,canvas.width,canvas.height);
+      drawCover(context,oldImage,70,70,710,650); drawCover(context,newImage,820,70,710,650);
+      context.fillStyle = "#17231f"; context.font = "700 24px Arial"; context.fillText("ARCHIVE",70,758); context.fillText("PRESENT",820,758);
+      context.fillStyle = "#66716b"; context.font = "18px Microsoft YaHei, Arial"; context.fillText(selectedPlace.oldCredit,70,790); context.fillText(currentCredit,820,790);
+      context.fillStyle = "#a54b38"; context.font = "700 22px Arial"; context.fillText("GUSU, PAST & PRESENT",70,845);
+      context.fillStyle = "#17231f"; context.font = "700 48px Georgia"; context.fillText(selectedPlace.name,70,905);
+      context.fillStyle = "#66716b"; context.font = "23px Microsoft YaHei, Arial"; context.fillText(selectedPlace.cn,70,945);
+      context.textAlign = "right"; context.font = "20px Arial"; context.fillText("One corner · Two moments",1530,905); context.fillText(new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"}),1530,945); context.textAlign = "left";
+    }
+    canvas.toBlob(blob => { const url = URL.createObjectURL(blob), link = document.createElement("a"); link.href = url; link.download = `gusu-${selectedPlace.id}-${remoteMode ? "postcard" : "checkin"}.png`; link.click(); setTimeout(() => URL.revokeObjectURL(url),1000); },"image/png");
+  } catch { alert("纪念卡生成失败，请重试。"); }
+  finally { el.downloadBtn.disabled = false; el.downloadBtn.textContent = original; }
+}
 async function makeVisitThumbnail(source) {
   try { const image = await loadImage(source), canvas = document.createElement("canvas"), context = canvas.getContext("2d"); canvas.width = 360; canvas.height = 270; drawCover(context, image, 0, 0, canvas.width, canvas.height); return canvas.toDataURL("image/jpeg", .72); } catch { return ""; }
 }
@@ -406,11 +596,10 @@ el.backHomeBtn.addEventListener("click",() => { stopCamera(); showPage("home"); 
 el.opacitySlider.addEventListener("input",event => setOpacity(event.target.value));
 el.zoomSlider.addEventListener("input",event => { overlayState.scale = Number(event.target.value)/100; applyOverlayTransform(); });
 el.rotationSlider.addEventListener("input",event => { overlayState.rotation = Number(event.target.value); applyOverlayTransform(); });
-document.querySelectorAll("[data-ghost-nudge]").forEach(button => button.addEventListener("click", () => { if (overlayState.locked) return; const [dx,dy] = button.dataset.ghostNudge.split(",").map(Number); overlayState.x += dx; overlayState.y += dy; applyOverlayTransform(); }));
 el.fitBtn.addEventListener("click",() => { overlayState.fit = overlayState.fit === "cover" ? "contain" : "cover"; applyOverlayTransform(); });
-el.lockBtn.addEventListener("click",() => { overlayState.locked = !overlayState.locked; activePointers.clear(); pinchStart = null; el.cameraContainer.classList.remove("is-dragging"); applyOverlayTransform(); });
-el.resetOverlayBtn.addEventListener("click",resetOverlay); el.cameraContainer.addEventListener("pointerdown",handleOverlayPointerDown); el.cameraContainer.addEventListener("pointermove",handleOverlayPointerMove); el.cameraContainer.addEventListener("pointerup",handleOverlayPointerEnd); el.cameraContainer.addEventListener("pointercancel",handleOverlayPointerEnd); el.cameraContainer.addEventListener("lostpointercapture",handleOverlayPointerEnd);
-el.captureBtn.addEventListener("click",capturePhoto); el.uploadInput.addEventListener("change",handleUpload); el.referenceBtn.addEventListener("click",() => { referenceOnly = !referenceOnly; setOpacity(el.opacitySlider.value); el.referenceBtn.textContent = referenceOnly ? "Restore overlay" : "View archive"; });
+el.lockBtn.addEventListener("click",() => { overlayState.locked = !overlayState.locked; activePointers.clear(); applyOverlayTransform(); });
+el.resetOverlayBtn.addEventListener("click",resetOverlay); el.cameraContainer.addEventListener("pointerdown",handleOverlayPointerDown); el.cameraContainer.addEventListener("pointermove",handleOverlayPointerMove); el.cameraContainer.addEventListener("pointerup",handleOverlayPointerEnd); el.cameraContainer.addEventListener("pointercancel",handleOverlayPointerEnd);
+el.captureBtn.addEventListener("click",capturePhoto); el.uploadInput.addEventListener("change",handleUpload); el.referenceBtn.addEventListener("click",async () => { cameraFacingMode = cameraFacingMode === "user" ? "environment" : "user"; el.referenceBtn.textContent = cameraFacingMode === "user" ? "切换到后置镜头" : "切换到前置镜头"; await startCamera(); });
 el.oldPointStage.addEventListener("click",event => handlePointClick("old",event)); el.newPointStage.addEventListener("click",event => handlePointClick("new",event)); el.undoPointBtn.addEventListener("click",undoPoint); el.clearPointsBtn.addEventListener("click",clearPoints);
 el.alignOpacitySlider.addEventListener("input",event => { el.warpCanvas.style.opacity = event.target.value; el.alignOpacityValue.value = `${Math.round(Number(event.target.value)*100)}%`; });
 el.alignBackBtn.addEventListener("click",async () => { showPage("camera"); await startCamera(); }); el.skipAlignBtn.addEventListener("click",() => prepareResult(selectedPlace,fieldImageSrc,false,selectedPlace.oldPhoto)); el.confirmAlignBtn.addEventListener("click",confirmAlignment);
@@ -425,7 +614,7 @@ el.retakeBtn.addEventListener("click",async () => { if (remoteMode) { showPage("
 el.downloadBtn.addEventListener("click",downloadPostcard); el.finishBtn.addEventListener("click",finishVisit); window.addEventListener("resize",() => { renderPointMarkers(); loadDesktopImages(); }); window.addEventListener("beforeunload",stopCamera); document.addEventListener("visibilitychange",() => { if (document.hidden && !pages.camera.classList.contains("hidden")) stopCamera(); });
 document.addEventListener("keydown", event => { if (event.key !== "Escape") return; if (!el.collectionDrawer.classList.contains("hidden")) closeCollection(); else if (!$("onboarding").classList.contains("hidden")) closeOnboarding(); });
 
-buildStories(); loadDesktopImages(); buildRouteStops(); initMap(); updateVisited(); selectPlace(places[0], false, false); setHeroMode("reveal"); applyOverlayTransform(); updateAlignmentUI(); if (!localStorage.getItem("gusu-onboarding-complete")) setTimeout(openOnboarding, 450);
+buildStories(); loadDesktopImages(); buildRouteStops(); renderDiscoveryBrowser(); initMap(); updateVisited(); selectPlace(places[0], false, false); setHeroMode("reveal"); applyOverlayTransform(); updateAlignmentUI(); if (!localStorage.getItem("gusu-onboarding-complete")) setTimeout(openOnboarding, 450);
 
 
 

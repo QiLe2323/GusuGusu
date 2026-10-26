@@ -9,7 +9,7 @@
   <title>Gusu, Past &amp; Present</title>
   <link rel="preconnect" href="https://tiles.openfreemap.org" />
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=14" />
+  <link rel="stylesheet" href="style.css?v=15" />
 </head>
 <body>
   <header class="site-header">
@@ -32,8 +32,8 @@
           <h1 id="hero-title">Stand in the same place, decades later.</h1>
           <p class="hero-copy">Match archival photographs with the streets of Gusu today. Explore from anywhere, or follow the route and make your own then-and-now image.</p>
           <div class="hero-actions">
-            <button id="try-demo-btn" class="primary-btn" type="button">Try the comparison <span>→</span></button>
-            <a class="secondary-btn" href="#route">Start the city walk</a>
+            <button id="try-demo-btn" class="primary-btn" type="button">线上探索姑苏 <span>→</span></button>
+            <a class="secondary-btn" href="#route">开启城市漫步</a>
           </div>
           <div class="trust-row" aria-label="Experience details">
             <span><i>20</i> documented viewpoints</span><span><i>⌖</i> optional location</span><span><i>○</i> photos stay on device</span>
@@ -86,7 +86,7 @@
         <ol class="how-steps">
           <li><span>01</span><div><strong>Choose a story</strong><p>Preview the transformation remotely before deciding whether to walk there.</p></div></li>
           <li><span>02</span><div><strong>Find the viewpoint</strong><p>Use the map, bilingual place name and visual framing notes to locate the original angle.</p></div></li>
-          <li><span>03</span><div><strong>Make a new record</strong><p>Align the archival image, take your photograph and download a personal comparison postcard.</p></div></li>
+          <li><span>03</span><div><strong>完成古今合影打卡</strong><p>让自己进入画面，与历史照片同框，并下载一张专属姑苏纪念卡。</p></div></li>
         </ol>
       </section>
 
@@ -95,9 +95,18 @@
           <div><p class="eyebrow">THE FIELD ROUTE</p><h2 id="route-title">Explore the surviving clues across Gusu.</h2></div>
           <div class="route-tools"><p>Twenty archival viewpoints across the old city.</p><div class="map-tool-row"><button id="open-route-btn" class="locate-btn route-plan-btn" type="button"><span>♡</span> My route</button><button id="locate-btn" class="locate-btn" type="button"><span>⌖</span> Locate me</button></div></div>
         </div>
+        <section class="discovery-browser" aria-label="主题与路线探索">
+          <div class="discovery-tabs" role="tablist" aria-label="探索方式">
+            <button id="themes-tab" class="is-active" type="button" role="tab" aria-selected="true" aria-controls="themes-panel"><span>01</span> 按主题找地点<small>根据兴趣筛选，不规定顺序</small></button>
+            <button id="walks-tab" type="button" role="tab" aria-selected="false" aria-controls="walks-panel"><span>02</span> 按路线去漫步<small>告诉你先去哪、后去哪</small></button>
+          </div>
+          <div id="themes-panel" class="discovery-panel" role="tabpanel" aria-labelledby="themes-tab"><div id="theme-options" class="theme-options"></div></div>
+          <div id="walks-panel" class="discovery-panel hidden" role="tabpanel" aria-labelledby="walks-tab"><div id="walk-options" class="walk-options"></div><div id="walk-detail" class="walk-detail hidden"></div></div>
+        </section>
         <div class="map-shell">
           <div id="map" role="application" aria-label="Map of twenty photographic viewpoints"></div>
           <div class="map-key" aria-label="Map legend"><span><i class="key-unvisited"></i>Archive photo</span><span><i class="key-visited">✓</i>Visited</span></div>
+          <div id="active-explore-label" class="active-explore-label hidden" aria-live="polite"></div>
           <div id="location-toast" class="map-toast hidden" role="status"></div>
           <div id="route-stops" class="route-stops" aria-label="Selected photographic viewpoint"></div>
         </div>
@@ -119,8 +128,8 @@
             </div>
             <div class="place-actions">
               <button id="save-place-btn" class="save-place-btn" type="button" aria-pressed="false">♡ Save to route</button>
-              <button id="remote-btn" class="secondary-btn" type="button">Explore from home</button>
-              <button id="start-btn" class="primary-btn" type="button">Capture on site <span>→</span></button>
+              <button id="remote-btn" class="secondary-btn" type="button">线上看古今</button>
+              <button id="start-btn" class="primary-btn" type="button">古今合影打卡 <span>→</span></button>
             </div>
             <a id="nav-link" class="nav-link" href="#" target="_blank" rel="noreferrer">Open walking directions in Amap ↗</a>
           </div>
@@ -129,57 +138,51 @@
     </section>
 
     <section id="camera-page" class="page hidden" aria-labelledby="camera-title">
-      <button id="back-home-btn" class="text-back" type="button">← Back to the story</button>
+      <button id="back-home-btn" class="text-back" type="button">← 返回地点故事</button>
       <div class="camera-heading">
-        <div><p id="camera-step" class="eyebrow">ON-SITE COMPARISON</p><h1 id="camera-title">Find the original frame.</h1><p id="camera-place-name"></p></div>
+        <div><p id="camera-step" class="eyebrow">古今合影打卡</p><h1 id="camera-title">让你与过去同框。</h1><p id="camera-place-name"></p></div>
         <div id="proximity-status" class="proximity-status"><span></span><b>Location optional</b></div>
       </div>
       <div class="field-layout">
-        <div class="camera-column">
+        <div>
           <div class="camera-container">
             <video id="camera" autoplay muted playsinline></video>
-            <div id="camera-placeholder" class="camera-placeholder"><span>◎</span><strong>Opening the camera</strong><p>Allow access to your rear camera</p></div>
+            <div id="camera-placeholder" class="camera-placeholder"><span>◎</span><strong>正在打开相机</strong><p>允许相机权限，让自己进入古今画面</p></div>
             <img id="overlay-photo" alt="Archival photograph used for alignment" />
             <div class="camera-grid" aria-hidden="true"></div>
             <div class="frame-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-            <div id="ghost-mode-label" class="ghost-mode-label">GHOST UNLOCKED · DRAG TO POSITION</div>
-            <div class="camera-guide">Match the strongest roofline and road edge first</div><div id="camera-credit" class="camera-credit"></div>
+            <div id="ghost-mode-label" class="ghost-mode-label">旧影可移动 · 拖动调整位置</div>
+            <div id="segmentation-status" class="segmentation-status hidden" role="status"><span></span><b>正在自动抠出人物…</b></div>
+            <div class="camera-guide">把自己放进画面，再调整旧照片的位置与透明度</div><div id="camera-credit" class="camera-credit"></div>
           </div>
           <div id="camera-error" class="camera-error hidden" role="alert"><strong>Camera unavailable</strong><p id="camera-error-text"></p></div>
-          <div class="control-panel" aria-label="Ghost photograph controls">
-            <div class="control-title"><label for="opacity-slider">Archival overlay</label><output id="opacity-value">50%</output></div>
+        </div>
+        <aside class="field-notes">
+          <p class="eyebrow">合影提示</p><h2>找到古今相接的位置</h2>
+          <ul id="anchor-list"></ul>
+          <div class="control-panel">
+            <div class="control-title"><label for="opacity-slider">历史照片透明度</label><output id="opacity-value">35%</output></div>
             <input id="opacity-slider" type="range" min="0" max="1" step="0.01" value="0.5" />
             <div class="opacity-labels"><span>Present</span><span>Past</span></div>
             <div class="control-title second-control"><label for="zoom-slider">Ghost size</label><output id="zoom-value">100%</output></div>
             <input id="zoom-slider" type="range" min="50" max="220" step="1" value="100" />
             <div class="control-title second-control"><label for="rotation-slider">Fine rotation</label><output id="rotation-value">0°</output></div>
             <input id="rotation-slider" type="range" min="-20" max="20" step="0.5" value="0" />
-            <div class="control-title second-control"><span>Fine position</span><output id="position-value">Centred</output></div>
-            <div class="ghost-nudge-grid" aria-label="Fine position controls">
-              <button type="button" data-ghost-nudge="0,-6" aria-label="Move ghost up">↑</button>
-              <button type="button" data-ghost-nudge="-6,0" aria-label="Move ghost left">←</button>
-              <button type="button" data-ghost-nudge="6,0" aria-label="Move ghost right">→</button>
-              <button type="button" data-ghost-nudge="0,6" aria-label="Move ghost down">↓</button>
-            </div>
             <div class="ghost-tools">
               <button id="fit-btn" type="button">Contain</button>
               <button id="lock-btn" type="button">Lock ghost</button>
               <button id="reset-overlay-btn" type="button">Reset</button>
             </div>
-            <p class="gesture-note">Drag directly on the camera view. Pinch with two fingers, or use these controls for precise adjustment.</p>
+            <p class="gesture-note">拖动旧照片与现场对齐；双指缩放，或使用尺寸和旋转滑杆。人物不必完全遮挡，让古今两层都能被看见。</p>
           </div>
-        </div>
-        <aside class="field-notes">
-          <p class="eyebrow">FIELD NOTES</p><h2>Three anchors to match</h2>
-          <ul id="anchor-list"></ul>
         </aside>
       </div>
       <div class="camera-actions">
-        <label for="upload-input" class="secondary-btn">Choose a photo</label><input id="upload-input" class="visually-hidden" type="file" accept="image/*" capture="environment" />
+        <label for="upload-input" class="secondary-btn">选择已有照片</label><input id="upload-input" class="visually-hidden" type="file" accept="image/*" />
         <button id="capture-btn" class="shutter-btn" type="button" aria-label="Take a photograph"><span></span></button>
-        <button id="reference-btn" class="secondary-btn" type="button">View archive</button>
+        <button id="reference-btn" class="secondary-btn" type="button">切换到后置镜头</button>
       </div>
-      <p class="privacy-note">Your photograph is processed on this device and is never uploaded.</p>
+      <p class="privacy-note">照片只在你的设备中处理，不会上传。</p>
     </section>
 
     <canvas id="canvas" class="hidden"></canvas>
@@ -238,7 +241,8 @@
 
     <section id="preview-page" class="page hidden" aria-labelledby="preview-title">
       <button id="preview-back-btn" class="text-back" type="button">← Back</button>
-      <div class="preview-heading"><p class="eyebrow">YOUR COMPARISON</p><h1 id="preview-title">One corner, two moments.</h1><p id="preview-place-name"></p></div>
+      <div class="preview-heading"><p class="eyebrow">你的古今合影</p><h1 id="preview-title">我在姑苏，遇见过去。</h1><p id="preview-place-name"></p></div>
+      <div id="layer-stack-note" class="layer-stack-note hidden" aria-label="古今合影图层"><span>底层 · 当代街景</span><i>＋</i><span>中层 · 历史旧影</span><i>＋</i><span>顶层 · 你的身影</span></div>
       <div id="compare-studio" class="compare-studio">
         <div class="compare-toolbar">
           <div class="mode-switcher" role="group" aria-label="Comparison mode">
@@ -270,8 +274,8 @@
       </div>
       <div class="preview-actions">
         <button id="retake-btn" class="secondary-btn" type="button">Use another photo</button>
-        <button id="download-btn" class="primary-btn" type="button">Download postcard ↓</button>
-        <button id="finish-btn" class="text-btn" type="button">Complete visit</button>
+        <button id="download-btn" class="primary-btn" type="button">下载古今纪念卡 ↓</button>
+        <button id="finish-btn" class="text-btn" type="button">完成打卡</button>
       </div>
     </section>
   </main>
@@ -298,7 +302,7 @@
   </aside>
   <footer><span>GUSU HISTORIC PHOTOGRAPH FIELD PROJECT</span><span>Modern rephotographs: © 古城阳面 · For HER Lab teaching and student graduation work only.</span></footer>
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="app.js?v=14"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>
 
