@@ -3,8 +3,8 @@ const makePlace = data => {
   const oldOriginal = data.oldPhoto, nowOriginal = data.nowPhoto;
   return {
     type: "URBAN MEMORY",
-    storyTitle: `${data.name}: the same view, a changed city`,
-    hook: `Compare the archival frame with the present-day photograph and follow the details that still anchor ${data.name}.`,
+    storyTitle: `${data.cn.split(" · ")[0]}，旧影里的今日线索`,
+    hook: `从${data.cn.split(" · ")[0]}的历史影像出发，滑动看古今，再到现场寻找熟悉的轮廓。`,
     description: `This matched pair returns to the recorded viewpoint at ${data.cn} and uses fixed architectural, street and waterside features to make change visible.`,
     shotTip: "Use the historic thumbnail as a framing guide. Match one strong vertical edge first, then the road, canal or roofline.",
     anchors: data.anchors || ["The main architectural edge", "The road or canal line", "The roofline and mature trees"],
@@ -55,14 +55,17 @@ const el = {
 let selectedPlace = places[0], cameraStream = null, userPosition = null, userMarker = null, nearestLocatedPlace = null, referenceOnly = false, remoteMode = false, map = null, fieldImageSrc = "";
 const markers = new Map();
 let atlasFilter = "all", lastLitPlaceId = null;
-const visited = new Set(JSON.parse(localStorage.getItem("gusu-visited") || "[]"));
-const savedPlaces = new Set(JSON.parse(localStorage.getItem("gusu-saved-route") || "[]"));
-const visitRecords = JSON.parse(localStorage.getItem("gusu-visit-records") || "{}");
+const readArchiveStorage = (key, fallback) => {
+  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
+};
+const visited = new Set(readArchiveStorage("gusu-visited", []));
+const savedPlaces = new Set(readArchiveStorage("gusu-saved-route", []));
+const visitRecords = readArchiveStorage("gusu-visit-records", {});
 visited.forEach(id => { if (!visitRecords[id]) visitRecords[id] = { date:new Date().toISOString(), photo:"" }; });
 Object.keys(visitRecords).forEach(id => visited.add(id));
-localStorage.setItem("gusu-visited", JSON.stringify([...visited])); localStorage.setItem("gusu-visit-records", JSON.stringify(visitRecords));
+
 const pointColors = ["#b84937", "#187567", "#c38b26", "#315aa0", "#8b4da0", "#227c9d"];
-const overlayState = { x: 0, y: 0, scale: 1, rotation: 0, fit: "cover", locked: false };
+const overlayState = { x: 0, y: 0, scale: 1, rotation: 0, fit: "cover", locked: true };
 let overlayViewport = { width: 1, height: 1 };
 const activePointers = new Map();
 let pinchStart = null;
@@ -78,16 +81,25 @@ const placeThemes = [
   { id:"landmarks", name:"城门与地标", description:"寻找城门、寺观、塔楼与公共建筑", ids:["beisi","miluo","xuanmiao","twinpagodas","boxi","wuxianlibrary","panmen","jinmen","xumen"] }
 ];
 const curatedRoutes = [
-  { id:"shiquan-water", name:"十全水巷漫步", description:"从十全街走入河巷与桥边生活", distance:"约 1.7 km", duration:"约 40 分钟", ids:["shiquan","wuyachang","xingzao","brickbridge"] },
+  { id:"shiquan-water", name:"沿水而居 · 十全水巷", description:"沿着街、桥与河岸，寻找生活与水的连接", distance:"距离待实走核对", duration:"建议预留 35–50 分钟", ids:["shiquan","xingzao","wuyachang"],
+ question:"水与人的日常生活，今天还在哪里相连？",
+ reason:"从十全街的街面出发，在星造桥寻找跨水的连接，再到吴衙场观察临水墙面与屋檐。三站分别看街、桥、河岸，让照片中的生活关系在行走中逐渐清楚。",
+ timing:"35–50 分钟为体验预算，含每站约 5–8 分钟观察与拍照；步行时间、总距离及沿途通行情况尚待实地核对。",
+ exit:"不必走完全程。在任一站都可以结束并保留已记录的足迹；离开时用地图确认当前位置与可步行出口，返程交通和无障碍条件尚未核实。",
+ stops:[
+ {id:"shiquan",mode:"观察优先",title:"街：生活沿哪条线展开？",look:"对照树干、连续店面与街道走向，留意今天的人在哪里停留、从哪里进入街巷。",task:"找一处店面边界或树干，比较旧照与眼前空间的关系。",photo:"可选拍摄：用店面边界或街道走向接住旧影卡的一条线，保留周围完整街景。",minutes:"停留建议 5–8 分钟"},
+ {id:"xingzao",mode:"拍照优先",title:"桥：两岸如何被连接？",look:"比较河道走向、两岸墙面和右侧屋顶坡线，留意桥与街巷如何把两岸接起来。",task:"找一处仍能辨认的屋顶转折，看看它与河道的位置关系。",photo:"建议拍摄：选一条屋顶坡线，在纸边内外接上轮廓；以现场可安全停留的位置为准。",minutes:"停留建议 5–8 分钟"},
+ {id:"wuyachang",mode:"观察优先 · 可拍细节",title:"河岸：房屋如何面向水？",look:"对照临水白墙、屋檐和河岸边界，寻找房屋与水之间的间距、开口和层次。",task:"用一句话记录今天看到的一个临水细节，再回应整条路线的观察问题。",photo:"可选拍摄：留下墙与水相接的细节，不必重复整张旧照的构图。",minutes:"停留建议 5–8 分钟"}
+ ] },
   { id:"pingjiang-memory", name:"平江旧影线", description:"从观前街走向平江路，串起寺观与街巷", distance:"约 2.5 km", duration:"约 55 分钟", ids:["guanqian","xuanmiao","miluo","xuanqiao","pingjiang","lujia"] },
   { id:"city-gates", name:"城门记忆线", description:"沿古城西南边界寻找三座城门", distance:"约 3.8 km", duration:"约 70 分钟", ids:["jinmen","xumen","panmen"] }
 ];
 let activeBrowseIds = null, activeCuratedRoute = null, activeThemeId = "all";
 function loadDesktopImages() { if (!window.matchMedia("(min-width: 681px)").matches) return; document.querySelectorAll("img[data-desktop-src]").forEach(image => { if (!image.src) image.src = image.dataset.desktopSrc; }); }
 const onboardingSteps = [
-  { icon:"⌖", kicker:"STEP 1 · DISCOVER", title:"Choose a photograph on the map.", copy:"Every thumbnail marks the viewpoint where an archival photograph was taken. Tap one to preview the place and its framing clues." },
-  { icon:"◎", kicker:"STEP 2 · REPHOTOGRAPH", title:"Stand there and find the old frame.", copy:"Open the camera, match a roofline or street edge, then adjust the ghost photograph until the two moments line up." },
-  { icon:"✓", kicker:"STEP 3 · COLLECT", title:"Complete the visit and keep the proof.", copy:"Your date and field photograph stay on this device. Revisited places turn green and receive a completion stamp." }
+  { icon:"⌖", kicker:"01 / EXPLORE", title:"选一条路线，走到第一站。", copy:"现场漫步会用定位解锁当前站。也可以先选线上体验，用古今照片练习观察。" },
+  { icon:"◎", kicker:"02 / DISCOVER", title:"抬头找一处旧痕。", copy:"找一条屋檐、一个巷口或一段河岸。需要比较时，打开时光视角，手动对齐旧影。" },
+  { icon:"✓", kicker:"03 / COLLECT", title:"把发现收进探索手记。", copy:"点击照片标注揭示变化，收下历史卡片。进度保存在当前浏览器，随时可以回来继续。" }
 ];
 let onboardingIndex = 0;
 let cameraFacingMode = "user";
@@ -105,7 +117,7 @@ function renderOnboardingStep() {
   const step = onboardingSteps[onboardingIndex];
   $("onboarding-visual").textContent = step.icon; $("onboarding-kicker").textContent = step.kicker; $("onboarding-title").textContent = step.title; $("onboarding-copy").textContent = step.copy;
   $("onboarding-dots").innerHTML = onboardingSteps.map((_, index) => `<i class="${index === onboardingIndex ? "is-active" : ""}"></i>`).join("");
-  $("onboarding-next").innerHTML = onboardingIndex === onboardingSteps.length - 1 ? "Explore the map <span>→</span>" : "Next <span>→</span>";
+  $("onboarding-next").innerHTML = onboardingIndex === onboardingSteps.length - 1 ? "开始探索 <span>→</span>" : "下一步 <span>→</span>";
 }
 function openOnboarding() { onboardingIndex = 0; renderOnboardingStep(); $("onboarding").classList.remove("hidden"); document.body.classList.add("modal-open"); }
 function closeOnboarding() { $("onboarding").classList.add("hidden"); document.body.classList.remove("modal-open"); localStorage.setItem("gusu-onboarding-complete", "1"); setTimeout(() => map?.resize(), 80); }
@@ -147,7 +159,7 @@ function openCollection() { renderCollection(); el.collectionDrawer.classList.re
 function closeCollection() { el.collectionDrawer.classList.add("hidden"); document.body.classList.remove("modal-open"); }
 function showSavedRoute() {
   const routePlaces = [...savedPlaces].map(id => places.find(place => place.id === id)).filter(Boolean); if (!routePlaces.length) return;
-  closeCollection(); showPage("home"); const bounds = new maplibregl.LngLatBounds(); routePlaces.forEach(place => bounds.extend([place.lng, place.lat])); map.fitBounds(bounds, { padding:{ top:85, right:45, bottom:155, left:45 }, maxZoom:16, duration:650 }); selectPlace(routePlaces[0], false, false); toast(`${routePlaces.length}-stop route shown in saved order.`);
+  closeCollection(); showPage("home"); archive.open = true; if (!map) { try { initMap(); } catch {} } const bounds = new maplibregl.LngLatBounds(); routePlaces.forEach(place => bounds.extend([place.lng, place.lat])); map?.fitBounds(bounds, { padding:{ top:85, right:45, bottom:155, left:45 }, maxZoom:16, duration:650 }); selectPlace(routePlaces[0], false, false); $("route").scrollIntoView(); toast(`${routePlaces.length}-stop route shown in saved order.`);
 }
 
 function placesFromIds(ids) { return ids.map(id => places.find(place => place.id === id)).filter(Boolean); }
@@ -183,7 +195,7 @@ function setDiscoveryMode(mode) {
   } else if (activeCuratedRoute) {
     applyDiscoverySelection(activeCuratedRoute.ids, `路线 · ${activeCuratedRoute.name}`, activeCuratedRoute);
   } else {
-    applyDiscoverySelection(null, "");
+    selectCuratedRoute("shiquan-water");
   }
 }
 function selectTheme(themeId) {
@@ -194,6 +206,12 @@ function selectTheme(themeId) {
 function renderWalkDetail(route) {
   const routePlaces = placesFromIds(route.ids);
   el.walkDetail.innerHTML = `<div class="walk-detail-head"><div><strong>${route.name}</strong><small>${route.description} · ${route.distance} · ${route.duration}</small></div><button id="start-curated-route" type="button">从第 1 站开始 →</button></div><div class="walk-sequence">${routePlaces.map((place,index) => `${index ? '<i class="walk-arrow">→</i>' : ''}<button class="walk-stop" type="button" data-id="${place.id}"><b>${index + 1}</b>${place.cn.split("·")[0]}</button>`).join("")}</div>`;
+  if (route.question) {
+    const section=document.createElement('section');section.className='walk-story';
+    section.innerHTML=`<div class="walk-question"><small>一路带着这个问题</small><h3>${route.question}</h3><p>${route.reason}</p></div><div class="walk-practical"><p><b>时间与距离</b>${route.timing}</p><p><b>随时结束</b>${route.exit}</p><p class="walk-status">路线为基于现有影像点位的探索建议；地图连线表示站点顺序，步行路线请以导航及现场通行为准。</p></div><ol class="walk-observations">${route.stops.map((stop,index)=>{const place=places.find(p=>p.id===stop.id);return `<li><div class="walk-observation-head"><span>0${index+1} · ${stop.mode}</span><small>${stop.minutes}</small></div><h4>${stop.title}</h4><p class="walk-observation-place">${place.cn}</p><p>${stop.look}</p><p><b>试着找一找</b>${stop.task}</p><p><b>怎么留下照片</b>${stop.photo}</p><button type="button" class="walk-observe-link" data-observe-id="${stop.id}">在地图上看这一站 →</button></li>`;}).join('')}</ol><p class="walk-closing">走完后回看：你在哪一站找到了最清楚的“水与生活的连接”？一张照片或一句发现，都可以成为这次漫步的记录。</p>`;
+    el.walkDetail.appendChild(section);
+    section.querySelectorAll('[data-observe-id]').forEach(button=>button.addEventListener('click',()=>{selectPlace(places.find(place=>place.id===button.dataset.observeId),false);$('map').scrollIntoView({behavior:'smooth',block:'center'});}));
+  }
   el.walkDetail.classList.remove("hidden");
   el.walkDetail.querySelectorAll(".walk-stop").forEach(button => button.addEventListener("click", () => selectPlace(places.find(place => place.id === button.dataset.id), true)));
   $("start-curated-route").addEventListener("click", () => { selectPlace(routePlaces[0], true); toast(`${route.name}：第 1 站 ${routePlaces[0].cn}`); });
@@ -239,7 +257,7 @@ function setHeroMode(mode) {
   $("hero-opacity-control").classList.toggle("hidden", mode !== "fade");
   $("hero-blink-toggle").classList.toggle("hidden", mode !== "blink");
   el.heroOldWrap.style.transition = mode === "blink" ? "opacity .18s ease" : "";
-  if (mode === "reveal") { el.heroOldWrap.style.opacity = 1; setCompare(Number(el.heroSlider.value), el.heroOldWrap, el.heroHandle); $("hero-hint").textContent = "1930s → 2024 · Drag to reveal the changing street."; }
+  if (mode === "reveal") { el.heroOldWrap.style.opacity = 1; setCompare(Number(el.heroSlider.value), el.heroOldWrap, el.heroHandle); $("hero-hint").textContent = "1930年代 → 2024 · 轻轻滑动，穿过两段时光。"; }
   if (mode === "fade") { el.heroOldWrap.style.clipPath = "inset(0)"; el.heroOldWrap.style.opacity = $("hero-opacity").value; $("hero-hint").textContent = "1930s → 2024 · Adjust the ghost image to check alignment."; }
   if (mode === "lens") { el.heroOldWrap.style.opacity = 1; setHeroLensPosition(50, 50); $("hero-hint").textContent = "1930s → 2024 · Move the time lens across surviving details."; }
   if (mode === "blink") { el.heroOldWrap.style.clipPath = "inset(0)"; $("hero-hint").textContent = "1930s → 2024 · Flash between the two moments."; startHeroBlink(); }
@@ -249,7 +267,7 @@ function buildStories() {
   featuredPlaces.forEach(place => {
     const index = places.indexOf(place), card = document.createElement("article");
     card.className = "story-card"; card.dataset.id = place.id;
-    card.innerHTML = `<div class="story-image"><img data-desktop-src="${place.oldPhoto}" loading="lazy" decoding="async" alt="Archival view of ${place.name}"><span class="story-number">${formatIndex(index)}</span><span class="story-era">ARCHIVE</span><span class="story-source">${place.oldCredit}</span></div><div class="story-body"><span class="story-type">${place.type}</span><h3>${place.storyTitle}</h3><div class="story-cn">${place.name} · ${place.cn}</div><p class="story-hook">${place.hook}</p><div class="story-actions"><button class="story-preview" type="button">See the change</button><button class="story-route" type="button">Find on map ↓</button></div></div>`;
+    card.innerHTML = `<div class="story-image"><img data-desktop-src="${place.oldPhoto}" loading="lazy" decoding="async" alt="Archival view of ${place.name}"><span class="story-number">${formatIndex(index)}</span><span class="story-era">ARCHIVE</span><span class="story-source">${place.oldCredit}</span></div><div class="story-body"><span class="story-type">${place.type}</span><h3>${place.storyTitle}</h3><div class="story-cn">${place.name} · ${place.cn}</div><p class="story-hook">${place.hook}</p><div class="story-actions"><button class="story-preview" type="button">打开影像故事 ↗</button><button class="story-route" type="button">地图寻影 ↓</button></div></div>`;
     card.querySelector(".story-preview").addEventListener("click", () => openRemote(place));
     card.querySelector(".story-route").addEventListener("click", () => { selectPlace(place); $("route").scrollIntoView({ behavior: "smooth" }); });
     el.storyGrid.appendChild(card);
@@ -291,7 +309,7 @@ const GUSU_MAP_BOUNDS = [[120.585, 31.27], [120.665, 31.345]];
 function isInsideBounds(position, bounds) { return position.lng >= bounds[0][0] && position.lng <= bounds[1][0] && position.lat >= bounds[0][1] && position.lat <= bounds[1][1]; }
 function isInsideSuzhou(position) { return isInsideBounds(position, SUZHOU_BOUNDS); }
 function isInsideGusuMap(position) { return isInsideBounds(position, GUSU_MAP_BOUNDS); }
-function createPinElement(index, place) {
+function createPinElement(place, activate = () => selectPlace(place, true)) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "place-pin photo-pin";
@@ -302,7 +320,7 @@ function createPinElement(index, place) {
   lantern.setAttribute("aria-hidden", "true");
   lantern.innerHTML = `<svg viewBox="0 0 60 82" fill="none"><ellipse class="lantern-ground" cx="30" cy="74" rx="10" ry="3" fill="#173f34" opacity=".13"/><g class="lantern-body"><circle class="lantern-halo" cx="30" cy="33" r="27" fill="#edc771" opacity=".18"/><path d="M26 12V9a4 4 0 0 1 8 0v3" stroke="#92713b" stroke-width="2"/><rect x="20" y="12" width="20" height="5" rx="2.5" fill="#173f34" stroke="#e9cf8b" stroke-width="1.5"/><path d="M19 18Q9 31 17 47Q30 55 43 47Q51 31 41 18Q30 14 19 18Z" fill="#225746" stroke="#ffedb8" stroke-width="2"/><path d="M22 19Q14 33 22 47M38 19Q46 33 38 47M30 18V49" stroke="#bda165" stroke-width="1" opacity=".7"/><ellipse cx="30" cy="33" rx="11" ry="13" fill="#f7d88d"/><path d="M30 24l2.3 6.7L39 33l-6.7 2.3L30 42l-2.3-6.7L21 33l6.7-2.3Z" fill="#fff8df"/><circle cx="30" cy="33" r="2.5" fill="#b98232"/><rect x="21" y="48" width="18" height="5" rx="2.5" fill="#173f34" stroke="#e9cf8b" stroke-width="1.5"/><g class="lantern-tassel"><path d="M30 53v9" stroke="#b98b43" stroke-width="2"/><circle cx="30" cy="62" r="2" fill="#d8ad5b"/><path d="M27 65v6M30 65v8M33 65v6" stroke="#b98641" stroke-width="1.8" stroke-linecap="round"/></g><path class="lantern-spark" d="M8 18v6M5 21h6M49 42v6M46 45h6" stroke="#c59b46" stroke-width="1.5" stroke-linecap="round"/></g></svg>`;
   button.appendChild(lantern);
-  button.addEventListener("click", event => { event.stopPropagation(); selectPlace(place, true); });
+  button.addEventListener("click", event => { event.stopPropagation(); activate(); });
   return button;
 }
 function updateMarkerVisuals() {
@@ -334,6 +352,7 @@ function updateMarkerVisuals() {
     minZoom: 12.4,
     maxZoom: 18,
     maxBounds: SUZHOU_BOUNDS,
+    cooperativeGestures: true,
     attributionControl: false
   });
   map.scrollZoom.disable();
@@ -355,8 +374,8 @@ function updateMarkerVisuals() {
     updateCuratedRouteLine();
   });
   map.on("zoom", updateMarkerScale);
-  places.forEach((place, index) => {
-    const node = createPinElement(index, place);
+  places.forEach(place => {
+    const node = createPinElement(place);
     const marker = new maplibregl.Marker({ element: node, anchor: "center" }).setLngLat([place.lng, place.lat]).addTo(map);
     markers.set(place.id, marker);
   });
@@ -396,20 +415,29 @@ function locateUser() {
     if (!isInsideSuzhou(positionFound)) { el.nearestPlaceResult.classList.add("hidden"); toast("你目前不在苏州范围内，仍可使用线上探索。"); resetLocate(); return; }
     userPosition = positionFound;
     const node = document.createElement("div"); node.className = "user-pin"; node.setAttribute("aria-label", "你在苏州的位置");
-    userMarker = new maplibregl.Marker({ element: node, anchor:"center" }).setLngLat([userPosition.lng, userPosition.lat]).addTo(map);
+    if (map) userMarker = new maplibregl.Marker({ element: node, anchor:"center" }).setLngLat([userPosition.lng, userPosition.lat]).addTo(map);
     const nearest = places.reduce((best, place) => distanceMeters(userPosition, place) < best.distance ? { place, distance:distanceMeters(userPosition, place) } : best, { place:places[0], distance:Infinity });
     nearestLocatedPlace = nearest.place; selectPlace(nearest.place, false, false);
     el.nearestPlaceName.textContent = nearest.place.cn.split("·")[0]; el.nearestPlaceDistance.textContent = `${formatDistance(nearest.distance)} · 点击查看地点详情`; el.nearestPlaceResult.classList.remove("hidden");
-    const bounds = new maplibregl.LngLatBounds(); bounds.extend([userPosition.lng,userPosition.lat]); bounds.extend([nearest.place.lng,nearest.place.lat]); map.fitBounds(bounds,{padding:{top:85,right:55,bottom:120,left:55},maxZoom:16,duration:700});
+    const bounds = new maplibregl.LngLatBounds(); bounds.extend([userPosition.lng,userPosition.lat]); bounds.extend([nearest.place.lng,nearest.place.lat]); map?.fitBounds(bounds,{padding:{top:85,right:55,bottom:120,left:55},maxZoom:16,duration:700});
     updateDistance(); resetLocate(true);
     toast(`离你最近的是 ${nearest.place.cn.split("·")[0]}，距离 ${formatDistance(nearest.distance)}。`);
   }, error => { toast(error.code === 1 ? "尚未获得定位权限，你仍可使用线上探索。" : "暂时无法获取你的位置，请稍后重试。"); resetLocate(); }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
 }
 function resetLocate(success = false) { el.locateBtn.disabled = false; el.locateBtn.classList.toggle("is-located", success); el.locateBtn.innerHTML = success ? "<span>✓</span> 已找到最近景点" : "<span>⌖</span> 定位并找最近景点"; }
 
-function applyOverlayTransform() { el.overlayPhoto.style.transform = `translate3d(${overlayState.x}px,${overlayState.y}px,0) rotate(${overlayState.rotation}deg) scale(${overlayState.scale})`; el.overlayPhoto.style.objectFit = "contain"; el.zoomSlider.value = Math.round(overlayState.scale * 100); el.rotationSlider.value = overlayState.rotation; el.zoomValue.value = `${Math.round(overlayState.scale * 100)}%`; el.rotationValue.value = `${Number(overlayState.rotation).toFixed(overlayState.rotation % 1 ? 1 : 0)}°`; el.fitBtn.textContent = "居中旧影卡"; el.lockBtn.textContent = overlayState.locked ? "解锁旧影" : "锁定旧影"; el.lockBtn.classList.toggle("is-active", overlayState.locked); el.cameraContainer.classList.toggle("is-locked", overlayState.locked); el.ghostModeLabel.textContent = overlayState.locked ? "旧影已锁定" : "旧影可移动 · 拖动调整位置"; }
+function applyOverlayTransform() { el.overlayPhoto.style.transform = `translate3d(${overlayState.x}px,${overlayState.y}px,0) rotate(${overlayState.rotation}deg) scale(${overlayState.scale})`; el.overlayPhoto.style.objectFit = "contain"; el.zoomSlider.value = Math.round(overlayState.scale * 100); el.rotationSlider.value = overlayState.rotation; el.zoomValue.value = `${Math.round(overlayState.scale * 100)}%`; el.rotationValue.value = `${Number(overlayState.rotation).toFixed(overlayState.rotation % 1 ? 1 : 0)}°`; el.fitBtn.textContent = "居中旧影卡"; el.lockBtn.textContent = overlayState.locked ? "调整旧影卡" : "完成调整"; el.lockBtn.classList.toggle("is-active", overlayState.locked); el.cameraContainer.classList.toggle("is-locked", overlayState.locked); el.ghostModeLabel.textContent = overlayState.locked ? "点下方「调整旧影卡」后可拖动" : "调整中 · 拖动或双指缩放"; }
 function resetOverlay() { Object.assign(overlayState, { x: 0, y: 0, scale: 1, rotation: 0, fit: "cover", locked: false }); applyOverlayTransform(); }
-function setOpacity() { el.overlayPhoto.style.opacity = 1; el.opacityValue.value = "100%"; }
+function setOpacity(value) {
+  el.opacitySlider.value = value;
+  el.overlayPhoto.style.opacity = value;
+  el.opacityValue.value = Math.round(value * 100) + "%";
+}
+function setTrailCameraMode(active) {
+  pages.camera.classList.toggle("trail-camera", active);
+  $("trail-camera-back").classList.toggle("hidden", !active);
+  $("trail-camera-finish").classList.toggle("hidden", !active);
+}
 const pointerDistance = points => Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
 const pointerAngle = points => Math.atan2(points[1].y - points[0].y, points[1].x - points[0].x) * 180 / Math.PI;
 const pointerCenter = points => ({ x: (points[0].x + points[1].x) / 2, y: (points[0].y + points[1].y) / 2 });
@@ -453,7 +481,9 @@ function setFieldGuide(step) {
  document.querySelectorAll('[data-field-step]').forEach(b=>b.setAttribute('aria-pressed',Number(b.dataset.fieldStep)===step));
  el.cameraGuide.textContent=['① 找到同一个转折','② 站位优先，再调卡片','③ 在纸边接上一条线'][step];
 }
-async function startField() {
+async function startField(clue = null) {
+ clue = clue?.prompt ? clue : null;
+ setTrailCameraMode(Boolean(clue));
  remoteMode=false;isLayeredCheckin=false;fieldImageSrc='';uploadedFieldSource='';cameraFacingMode='environment';
  el.cameraContainer.classList.remove('has-field-upload');el.cameraContainer.style.aspectRatio='4 / 3';
  el.cameraStep.textContent='带着旧影，找到今天';$('camera-title').textContent='把古今接在一张照片里。';
@@ -461,12 +491,59 @@ async function startField() {
  $('camera-credit').textContent=selectedPlace.oldCredit;$('field-reference').src=selectedPlace.nowPhoto;
  $('field-directions').href=el.navLink.href;
  el.anchorList.innerHTML='<li>找一个今天仍存在的固定轮廓，不必对齐整栋建筑。</li><li>先调整站位，再缩放旧影卡；不要只靠拉大照片。</li><li>接不上的部分也记录了变化，可以原样留下。</li>';
- referenceOnly=false;resetOverlay();setOpacity(1);setFieldGuide(0);updateCaptureMethod();updateDistance();showPage('camera');await startCamera();
+  referenceOnly=false;resetOverlay();setOpacity(clue ? .48 : 1);setFieldGuide(0);updateCaptureMethod();updateDistance();
+ if (clue) {
+  el.cameraStep.textContent = "DISCOVER / 现场观察";
+  $("camera-title").textContent = "时光视角";
+  el.anchorList.replaceChildren(Object.assign(document.createElement("li"), { textContent: clue.prompt }));
+  el.cameraGuide.textContent = "停下脚步，再对齐一个固定轮廓";
+ }
+ showPage('camera');await startCamera();
 }
 
-async function startCamera() { stopCamera(); el.camera.classList.toggle("is-selfie", cameraFacingMode === "user"); updateCaptureMethod(); el.cameraError.classList.add("hidden"); el.cameraPlaceholder.classList.remove("hidden"); el.cameraPlaceholder.querySelector("strong").textContent = "正在打开相机"; el.cameraPlaceholder.querySelector("p").textContent = cameraFacingMode === "user" ? "把自己和街景一起放进画面" : "请同伴用后置镜头拍下你和街景"; if (!navigator.mediaDevices?.getUserMedia) { showCameraError("当前浏览器无法直接使用相机，请上传一张现场照片继续。"); return; } try { cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: cameraFacingMode }, width: { ideal: 1920 }, height: { ideal: 1280 } }, audio: false }); el.camera.srcObject = cameraStream; await el.camera.play(); el.cameraContainer.style.aspectRatio = el.camera.videoWidth + ' / ' + el.camera.videoHeight; el.cameraPlaceholder.classList.add("hidden"); } catch (error) { showCameraError(error.name === "NotAllowedError" ? "相机权限尚未开启，请在浏览器设置中允许，或上传现场照片。" : "无法打开相机，请上传现场照片继续。"); } }
-function showCameraError(message) { el.cameraErrorText.textContent = message; el.cameraError.classList.remove("hidden"); el.cameraPlaceholder.querySelector("strong").textContent = "可上传照片继续"; el.cameraPlaceholder.querySelector("p").textContent = "照片只在你的设备中处理"; }
-function stopCamera() { cameraStream?.getTracks().forEach(track => track.stop()); cameraStream = null; el.camera.srcObject = null; }
+let cameraRequest = 0;
+async function startCamera() {
+  stopCamera();
+  const request = cameraRequest;
+  const trailCamera = pages.camera.classList.contains("trail-camera");
+  el.camera.classList.toggle("is-selfie", cameraFacingMode === "user");
+  updateCaptureMethod();
+  el.cameraError.classList.add("hidden");
+  el.cameraPlaceholder.classList.remove("hidden");
+  el.cameraPlaceholder.querySelector("strong").textContent = "正在打开相机";
+  el.cameraPlaceholder.querySelector("p").textContent = trailCamera ? "允许相机权限后，寻找照片中的建筑轮廓" : "把街景和旧影放进同一个画面";
+  try {
+    if (!navigator.mediaDevices?.getUserMedia) throw new Error("Camera unavailable");
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: cameraFacingMode }, width: { ideal: 1920 }, height: { ideal: 1280 } }, audio: false });
+    if (request !== cameraRequest || document.hidden) {
+      stream.getTracks().forEach(track => track.stop());
+      return;
+    }
+    cameraStream = stream;
+    el.camera.srcObject = stream;
+    await el.camera.play();
+    if (request !== cameraRequest) return;
+    if (el.camera.videoWidth && el.camera.videoHeight) el.cameraContainer.style.aspectRatio = el.camera.videoWidth + " / " + el.camera.videoHeight;
+    el.cameraPlaceholder.classList.add("hidden");
+  } catch {
+    if (request !== cameraRequest) return;
+    stopCamera();
+    showCameraError(trailCamera ? "相机不可用或权限未开启。可以返回线索，继续古今对照。" : "无法打开相机，请上传现场照片继续。");
+  }
+}
+function showCameraError(message) {
+  const trailCamera = pages.camera.classList.contains("trail-camera");
+  el.cameraErrorText.textContent = message;
+  el.cameraError.classList.remove("hidden");
+  el.cameraPlaceholder.querySelector("strong").textContent = trailCamera ? "可返回线索继续" : "可上传照片继续";
+  el.cameraPlaceholder.querySelector("p").textContent = "画面只在你的设备中处理";
+}
+function stopCamera() {
+  cameraRequest += 1;
+  cameraStream?.getTracks().forEach(track => track.stop());
+  cameraStream = null;
+  el.camera.srcObject = null;
+}
 async function capturePhoto() {
  if (!uploadedFieldSource && !el.camera.videoWidth) {showCameraError('相机尚未就绪，可以先上传现场照片。');return;}
  el.captureBtn.disabled=true;
@@ -625,6 +702,7 @@ function updateVisited() {
     if (date) date.textContent = done ? `Completed ${formatVisitDate(visitRecords[card.dataset.id].date)}` : "";
   });
   updateMarkerVisuals(); updateCollection();
+  document.dispatchEvent(new Event("gusu:archive-visits"));
 }
 
 document.querySelectorAll("[data-atlas-filter]").forEach(button => button.addEventListener("click", () => {
@@ -659,7 +737,7 @@ el.rotationSlider.addEventListener("input",event => { overlayState.rotation = Nu
 el.fitBtn.addEventListener("click",resetOverlay);
 el.lockBtn.addEventListener("click",() => { overlayState.locked = !overlayState.locked; activePointers.clear(); applyOverlayTransform(); });
 el.resetOverlayBtn.addEventListener("click",resetOverlay); el.cameraContainer.addEventListener("pointerdown",handleOverlayPointerDown); el.cameraContainer.addEventListener("pointermove",handleOverlayPointerMove); el.cameraContainer.addEventListener("pointerup",handleOverlayPointerEnd); el.cameraContainer.addEventListener("pointercancel",handleOverlayPointerEnd);
-el.captureBtn.addEventListener("click",capturePhoto); el.uploadInput.addEventListener("change",handleUpload); el.referenceBtn.addEventListener("click",async () => { uploadedFieldSource="";el.cameraContainer.classList.remove("has-field-upload");cameraFacingMode = cameraFacingMode === "user" ? "environment" : "user"; await startCamera(); });
+el.captureBtn.addEventListener("click",capturePhoto); el.uploadInput.addEventListener("change",handleUpload); el.referenceBtn.addEventListener("click",async () => { if (pages.camera.classList.contains("trail-camera")) { await startCamera(); return; } uploadedFieldSource="";el.cameraContainer.classList.remove("has-field-upload");cameraFacingMode = cameraFacingMode === "user" ? "environment" : "user"; await startCamera(); });
 el.oldPointStage.addEventListener("click",event => handlePointClick("old",event)); el.newPointStage.addEventListener("click",event => handlePointClick("new",event)); el.undoPointBtn.addEventListener("click",undoPoint); el.clearPointsBtn.addEventListener("click",clearPoints);
 el.alignOpacitySlider.addEventListener("input",event => { el.warpCanvas.style.opacity = event.target.value; el.alignOpacityValue.value = `${Math.round(Number(event.target.value)*100)}%`; });
 el.alignBackBtn.addEventListener("click",async () => { showPage("camera"); await startCamera(); }); el.skipAlignBtn.addEventListener("click",() => prepareResult(selectedPlace,fieldImageSrc,false,selectedPlace.oldPhoto)); el.confirmAlignBtn.addEventListener("click",confirmAlignment);
@@ -676,7 +754,23 @@ el.downloadBtn.addEventListener("click",downloadPostcard); el.finishBtn.addEvent
 document.addEventListener("keydown", event => { if (event.key !== "Escape") return; if (!el.collectionDrawer.classList.contains("hidden")) closeCollection(); else if (!$("onboarding").classList.contains("hidden")) closeOnboarding(); });
 
 document.querySelectorAll("[data-field-step]").forEach(b=>b.addEventListener("click",()=>setFieldGuide(Number(b.dataset.fieldStep))));
-buildStories(); loadDesktopImages(); buildRouteStops(); renderDiscoveryBrowser(); initMap(); updateVisited(); selectPlace(places[0], false, false); setHeroMode("reveal"); applyOverlayTransform(); updateAlignmentUI(); if (!localStorage.getItem("gusu-onboarding-complete")) setTimeout(openOnboarding, 450);
+const archive = $("trail-archive");
+archive.addEventListener("toggle", () => {
+  if (!archive.open) return;
+  loadDesktopImages();
+  if (!map) {
+    try { initMap(); } catch { $("map").textContent = "底图暂不可用，可继续浏览照片。"; }
+  }
+  map?.resize();
+});
+function openArchiveFromHash() {
+  if (!["#route", "#stories"].includes(location.hash)) return;
+  archive.open = true;
+  document.querySelector(location.hash).scrollIntoView();
+}
+window.addEventListener("hashchange", openArchiveFromHash);
+buildStories(); buildRouteStops(); renderDiscoveryBrowser(); updateVisited(); selectPlace(places[0], false, false); setHeroMode("reveal"); applyOverlayTransform(); updateAlignmentUI();
+openArchiveFromHash();
 
 
 

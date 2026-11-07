@@ -1,52 +1,125 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#142b24" />
-  <meta name="description" content="Match archival photographs with the streets of Suzhou today — remotely or as a photographic city walk." />
+  <meta name="theme-color" content="#f5f3ec" />
+  <meta name="description" content="循着姑苏古城的历史照片，步行解锁线索，对照古今，收集个人探索手记。" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23a54b38'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-size='38' fill='white'%3EG%3C/text%3E%3C/svg%3E" />
-  <title>Gusu, Past &amp; Present</title>
+  <title>姑苏寻影 · Gusu, Past &amp; Present</title>
   <link rel="preconnect" href="https://tiles.openfreemap.org" />
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
-  <link rel="stylesheet" href="style.css?v=21" />
+  <link rel="stylesheet" href="style.css?v=26" />
+  <link rel="stylesheet" href="trail.css?v=5" />
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="#top" aria-label="Gusu, Past and Present home">
-      <span class="brand-mark" aria-hidden="true">G</span>
-      <span><strong>Gusu, Past &amp; Present</strong><small>ARCHIVAL PHOTOGRAPH CITY WALK</small></span>
+    <a class="brand" href="#top" aria-label="返回姑苏寻影首页">
+      <span class="brand-mark" aria-hidden="true">影</span>
+      <span><strong>姑苏寻影</strong><small>GUSU FIELD NOTES</small></span>
     </a>
-    <nav aria-label="Main navigation">
-      <a href="#stories">Stories</a><a href="#route">Walk the route</a>
-      <button id="guide-btn" class="header-tool" type="button" aria-label="Show first-time guide">?</button>
-      <button id="collection-btn" class="progress-pill" type="button"><b id="visited-count">0 / 20</b> revisited · <span id="saved-count">0 saved</span></button>
+    <nav aria-label="主导航">
+      <a href="#trails" data-trail-jump>探索路线</a><a href="#trail-journal" data-trail-jump>探索手记</a>
+      <button id="guide-btn" class="header-tool" type="button" aria-label="查看探索指南">?</button>
+      <button id="collection-btn" class="progress-pill" type="button" aria-label="打开影像档案收藏"><span class="archive-label">影像收藏</span><b id="visited-count" hidden>0 / 20</b><span id="saved-count" hidden>0 saved</span></button>
     </nav>
   </header>
 
   <main id="top">
     <section id="home-page" class="page">
+      <div class="trail-site">
+        <section id="trail-mobile-map" aria-labelledby="trail-mobile-map-title">
+          <div class="trail-mobile-map-head">
+            <div><h1 id="trail-mobile-map-title">姑苏寻影地图</h1><p id="trail-map-progress" aria-live="polite"></p></div>
+            <button id="trail-map-scope" class="trail-btn" type="button" data-action="map-scope" hidden></button>
+          </div>
+          <div id="trail-mobile-map-mount"></div>
+          <nav class="trail-map-dock" aria-label="探索地图导航">
+            <a href="#trails"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="17" r="2"/><circle cx="19" cy="7" r="2"/><path d="M7 17h7a3 3 0 0 0 0-6h-3a2 2 0 1 1 0-4h6"/></svg>路线</a>
+            <button id="trail-mobile-continue" class="trail-btn trail-primary" type="button" data-action="current-trail">开始探索 →</button>
+            <a href="#trail-journal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16H6a2 2 0 0 1 0-4h12M7 4a2 2 0 0 0-2 2v12m4-9h5"/></svg>手记</a>
+          </nav>
+        </section>
+        <section class="trail-hero" aria-labelledby="trail-title">
+          <div class="trail-hero-copy">
+            <p class="trail-kicker"><span></span> GUSU FIELD NOTES</p>
+            <h1 id="trail-title">带一张旧照，<br><em>去走姑苏。</em></h1>
+            <p class="trail-lede">在今天的街巷里，找到老照片留下的细节。每看懂一处，就在地图上点亮一盏灯笼。</p>
+            <div class="trail-actions"><a class="trail-btn trail-primary" href="#trails">打开探索地图 <span aria-hidden="true">↘</span></a><a class="trail-hero-link" href="#trail-journal">打开手记 ↗</a></div>
+            <div class="trail-hero-meta"><span>3 条路线</span><span>20 处影像坐标</span><span>可在现场或线上探索</span></div>
+          </div>
+          <figure class="trail-hero-photo">
+            <div class="trail-photo-mat">
+              <img id="trail-cover-then" src="images/optimized/20003A-观前街-1930年代-苏州通史.webp" alt="1930年代的观前街，两侧商铺沿着街道向远处延伸" loading="lazy" decoding="async">
+              <img id="trail-cover-now" src="images/optimized/20003B-观前街-1930年代-苏州通史-2024.webp" alt="2024年重拍的观前街，行人经过两侧的新店面" loading="lazy" decoding="async" hidden>
+              <span class="trail-photo-index">档案 01</span>
+            </div>
+            <figcaption><div><b>观前街</b><span id="trail-cover-credit" aria-live="polite">1930年代 · 选自《苏州通史》</span></div>
+              <div class="trail-toggle" role="group" aria-label="切换观前街古今照片">
+                <button type="button" data-cover-era="then" aria-pressed="true">旧影</button>
+                <button type="button" data-cover-era="now" aria-pressed="false">今景</button>
+              </div>
+            </figcaption>
+          </figure>
+        </section>
+        <section id="trails" class="trail-section" aria-labelledby="trails-title">
+          <div class="trail-heading"><div><p class="trail-kicker">01 / EXPLORE</p><h2 id="trails-title">从哪儿出发？</h2></div><p>找一座消失的楼阁，认出老街的轮廓，或沿河看看从前的生活。</p></div>
+          <div class="trail-explore-grid">
+            <section id="trail-desktop-map-mount" aria-labelledby="trail-desktop-map-title">
+              <div class="trail-desktop-map-head">
+                <div><h3 id="trail-desktop-map-title">姑苏寻影地图</h3><p id="trail-desktop-map-progress" aria-live="polite"></p></div>
+                <button id="trail-desktop-map-scope" class="trail-btn" type="button" data-action="map-scope" hidden></button>
+              </div>
+              <div class="trail-map-wrap" id="trail-map-wrap">
+                <div id="trail-map" aria-label="姑苏寻影地图"></div>
+                <div id="trail-schematic" class="trail-schematic"></div>
+                <p id="trail-map-caption" class="trail-map-caption">虚线表示站点顺序。实际步行请参考导航与现场通行。</p>
+              </div>
+            </section>
+            <div class="trail-route-sidebar">
+              <h3 class="trail-sidebar-title">主题路线</h3>
+              <div id="trail-options" class="trail-options" aria-label="主题路线"></div>
+              <section id="trail-workspace" aria-labelledby="trail-workspace-title" hidden>
+                <div id="trail-session-head" class="trail-session-head"></div>
+                <div class="trail-station-panel">
+                  <div id="trail-stops"></div>
+                  <div id="trail-current"></div>
+                  <p id="trail-location" class="trail-location" role="status"></p>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+        <section id="trail-journal" class="trail-section trail-journal" aria-labelledby="trail-journal-title">
+          <div class="trail-heading"><div><p class="trail-kicker">02 / COLLECT</p><h2 id="trail-journal-title">探索手记</h2></div><p>收好沿途的照片与发现，下次打开还能接着走。</p></div>
+          <div class="trail-toggle trail-journal-tabs" role="group" aria-label="手记分类"><button type="button" data-journal="field" aria-pressed="true">现场</button><button type="button" data-journal="preview" aria-pressed="false">线上</button></div>
+          <div id="trail-journal-list"></div>
+        </section>
+      </div>
+      <details id="trail-archive" class="trail-archive">
+        <summary>打开完整影像档案 <span>浏览原有点位、古今对照与拍照工具</span></summary>
+        <section class="mobile-invitation" aria-label="姑苏寻影"><div><p>SUZHOU · A WALK THROUGH TIME</p><h2>旧影为引，<br /><em>姑苏等你来寻。</em></h2><span>从一处轮廓，发现一座城。</span></div><a href="#route" aria-label="开始探索地图">开始寻影 <span>↘</span></a></section>
       <section class="hero-section" aria-labelledby="hero-title">
         <div class="hero-copy-wrap">
           <p class="eyebrow">SUZHOU · ONE FRAME · TWO MOMENTS</p>
-          <h1 id="hero-title">Stand in the same place, decades later.</h1>
-          <p class="hero-copy">Match archival photographs with the streets of Gusu today. Explore from anywhere, or follow the route and make your own then-and-now image.</p>
+          <h1 id="hero-title">走进姑苏，<br /><em>与旧时光相遇。</em></h1>
+          <p class="hero-copy">一张旧照片，一条水巷，一次新的发现。滑动影像读懂古今，带着线索走到现场，把今天的你留在姑苏的故事里。</p>
           <div class="hero-actions">
             <button id="try-demo-btn" class="primary-btn" type="button">线上探索姑苏 <span>→</span></button>
             <a class="secondary-btn" href="#route">开启城市漫步</a>
           </div>
           <div class="trust-row" aria-label="Experience details">
-            <span><i>20</i> documented viewpoints</span><span><i>⌖</i> optional location</span><span><i>○</i> photos stay on device</span>
+            <span><i>20</i> 处历史影像</span><span><i>⌖</i> 循线索去发现</span><span><i>○</i> 照片留在本机</span>
           </div>
         </div>
 
         <div class="hero-demo" id="hero-demo">
           <div class="hero-studio-toolbar">
             <div class="mode-switcher hero-mode-switcher" role="group" aria-label="Homepage comparison mode">
-              <button class="is-active" data-hero-mode="reveal" type="button">Reveal</button>
-              <button data-hero-mode="fade" type="button">Ghost</button>
-              <button data-hero-mode="lens" type="button">Time lens</button>
-              <button data-hero-mode="blink" type="button">Flashback</button>
+              <button class="is-active" data-hero-mode="reveal" type="button">古今对照</button>
+              <button data-hero-mode="fade" type="button">时光叠影</button>
+              <button data-hero-mode="lens" type="button">寻影镜</button>
+              <button data-hero-mode="blink" type="button">时光闪回</button>
             </div>
           </div>
           <div id="hero-stage" class="demo-stage compare-component" data-mode="reveal">
@@ -68,8 +141,8 @@
 
       <section id="stories" class="stories-section section-block" aria-labelledby="stories-title">
         <div class="section-intro">
-          <div><p class="eyebrow">THREE WAYS TO BEGIN</p><h2 id="stories-title">Three glimpses into a changing city.</h2></div>
-          <p>Swipe through three representative stories. Discover the other seventeen viewpoints by exploring the map.</p>
+          <div><p class="eyebrow">THREE WAYS TO BEGIN</p><h2 id="stories-title">先从一张旧影，认识姑苏。</h2></div>
+          <p>街巷、水岸、城门。三段影像故事，开启你的古城探索。更多地点，留待地图里慢慢发现。</p>
         </div>
         <div class="featured-carousel">
           <div id="story-grid" class="story-grid" aria-label="Three representative photographic stories"></div>
@@ -82,18 +155,18 @@
       </section>
 
       <section class="how-section section-block" aria-labelledby="how-title">
-        <div class="how-heading"><p class="eyebrow">A SMALL ACT OF FIELDWORK</p><h2 id="how-title">Look closely. Find the frame. Bring it forward.</h2></div>
+        <div class="how-heading"><p class="eyebrow">A SMALL ACT OF FIELDWORK</p><h2 id="how-title">看见过去，<br />留下今天。</h2></div>
         <ol class="how-steps">
-          <li><span>01</span><div><strong>Choose a story</strong><p>Preview the transformation remotely before deciding whether to walk there.</p></div></li>
-          <li><span>02</span><div><strong>Find the viewpoint</strong><p>Use the map, bilingual place name and visual framing notes to locate the original angle.</p></div></li>
-          <li><span>03</span><div><strong>完成古今合影打卡</strong><p>让自己进入画面，与历史照片同框，并下载一张专属姑苏纪念卡。</p></div></li>
+          <li><span>01</span><div><strong>读一段旧影</strong><p>从照片里的一个细节出发，发现城市的改变与延续。</p></div></li>
+          <li><span>02</span><div><strong>沿线索去寻找</strong><p>跟随地图与轮廓指引，在街巷里认出旧影留下的线索。</p></div></li>
+          <li><span>03</span><div><strong>完成古今合影打卡</strong><p>让旧影卡与眼前的轮廓接上，留下一张纪念照，点亮你的时光灯笼。</p></div></li>
         </ol>
       </section>
 
       <section id="route" class="route-section section-block" aria-labelledby="route-title">
         <div class="section-intro route-intro">
-          <div><p class="eyebrow">THE FIELD ROUTE</p><h2 id="route-title">Explore the surviving clues across Gusu.</h2></div>
-          <div class="route-tools"><p>Twenty archival viewpoints across the old city.</p><div class="map-tool-row"><button id="open-route-btn" class="locate-btn route-plan-btn" type="button"><span>♡</span> My route</button><button id="locate-btn" class="locate-btn" type="button"><span>⌖</span> 定位并找最近景点</button></div></div>
+          <div><p class="eyebrow">THE FIELD ROUTE</p><h2 id="route-title">下一段故事，就在街巷里。</h2></div>
+          <div class="route-tools"><p>20 处旧影坐标 · 按兴趣探索，或跟随主题漫步。</p><div class="map-tool-row"><button id="open-route-btn" class="locate-btn route-plan-btn" type="button"><span>♡</span> 我的路线</button><button id="locate-btn" class="locate-btn" type="button"><span>⌖</span> 定位并找最近景点</button></div></div>
         </div>
         <section class="discovery-browser" aria-label="主题与路线探索">
           <div class="discovery-tabs" role="tablist" aria-label="探索方式">
@@ -144,6 +217,7 @@
           </div>
         </article>
       </section>
+      </details>
     </section>
 
     <section id="explore-page" class="page hidden" aria-labelledby="explore-title">
@@ -158,6 +232,7 @@
     </section>
 
     <section id="camera-page" class="page hidden" aria-labelledby="camera-title">
+      <button id="trail-camera-back" class="text-back hidden" type="button">← 返回历史线索</button>
       <button id="back-home-btn" class="text-back" type="button">← 返回地点故事</button>
       <div class="camera-heading">
         <div><p id="camera-step" class="eyebrow">古今合影打卡</p><h1 id="camera-title">让你与过去同框。</h1><p id="camera-place-name"></p></div>
@@ -182,6 +257,7 @@
             <button id="reference-btn" class="secondary-btn" type="button">他人帮拍 · 后置</button>
           </div>
           <div class="capture-method-note" aria-live="polite"><b id="capture-method-name">自拍模式 · 前置镜头</b><span id="capture-method-copy">按上方指引寻找轮廓，再拖动旧影卡。</span></div>
+          <button id="trail-camera-finish" class="trail-btn trail-primary hidden" type="button">返回线索，查看标注 →</button>
           <p class="privacy-note">照片只在你的设备中处理，不会上传。</p>
         </div>
         <aside class="field-notes">
@@ -312,7 +388,7 @@
 
   <div id="onboarding" class="onboarding hidden" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
     <div class="onboarding-card">
-      <button id="onboarding-skip" class="onboarding-skip" type="button">Skip</button>
+      <button id="onboarding-skip" class="onboarding-skip" type="button">跳过</button>
       <div id="onboarding-visual" class="onboarding-visual" aria-hidden="true"></div>
       <p id="onboarding-kicker" class="eyebrow"></p>
       <h2 id="onboarding-title"></h2>
@@ -330,9 +406,29 @@
       <div class="collection-actions"><button id="show-route-btn" class="primary-btn" type="button">Show route on map <span>→</span></button><button id="clear-route-btn" class="text-btn" type="button">Clear saved route</button></div>
     </div>
   </aside>
-  <footer><span>GUSU HISTORIC PHOTOGRAPH FIELD PROJECT</span><span>Modern rephotographs: © 古城阳面 · For HER Lab teaching and student graduation work only.</span></footer>
+  <dialog id="trail-dialog" class="trail-dialog" aria-labelledby="trail-dialog-title"><div id="trail-dialog-content"></div></dialog>
+  <section id="gusu-ar" hidden aria-label="空间 AR">
+    <div class="gusu-ar-header">
+      <div><b id="gusu-ar-place"></b><p id="gusu-ar-credit"></p></div>
+      <button id="gusu-ar-exit" class="trail-btn" type="button">退出 AR</button>
+    </div>
+    <div id="gusu-ar-reticle" aria-hidden="true" hidden></div>
+    <div class="gusu-ar-controls">
+      <p id="gusu-ar-status" role="status"></p>
+      <div id="gusu-ar-adjust" hidden>
+        <label>透明度 <input id="gusu-ar-opacity" type="range" min=".1" max="1" step=".05" value=".65"></label>
+        <label>宽度 <input id="gusu-ar-size" type="range" min=".6" max="8" step=".2" value="2.4"></label>
+      </div>
+      <button id="gusu-ar-place-photo" class="trail-btn trail-primary" type="button" disabled>在此放置旧照</button>
+      <button id="gusu-ar-reset" class="trail-btn" type="button" hidden>重新放置</button>
+    </div>
+  </section>
+  <footer><span>GUSU HISTORIC PHOTOGRAPH FIELD PROJECT</span><span>现代重拍 © 古城阳面 · 仅限 HER Lab 教学及学生毕业成果使用</span></footer>
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="app.js?v=21"></script>
+  <script src="app.js?v=26"></script>
+  <script src="trail-data.js?v=1"></script>
+  <script src="spatial-ar.js?v=1"></script>
+  <script src="trail.js?v=6"></script>
 </body>
 </html>
 
