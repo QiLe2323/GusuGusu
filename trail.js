@@ -501,6 +501,7 @@
           <button type="button" class="trail-btn" data-action="stop-postcard-scan">关闭相机</button>
           <button type="button" class="trail-btn" data-action="postcard-clue" aria-expanded="false" aria-controls="postcard-ar-note" hidden>卡面线索</button>
           <button type="button" class="trail-btn" id="postcard-ar-photo-toggle" aria-pressed="false" hidden>今日重拍</button>
+          <button type="button" class="trail-btn" id="postcard-ar-replay" hidden>重播展开</button>
           ${field ? '<button type="button" class="trail-btn trail-primary" data-action="open-scanned-story" hidden>查看古今与记录 →</button>' : ""}
         </div>
       </section>`;
@@ -560,12 +561,14 @@
     const storyButton = panel.querySelector('[data-action="open-scanned-story"]');
     const clueButton = panel.querySelector('.postcard-scan-actions [data-action="postcard-clue"]');
     const photoButton = $("postcard-ar-photo-toggle");
+    const replayButton = $("postcard-ar-replay");
     const scanStatus = $("postcard-scan-status");
     if (field) $("postcard-quiz").hidden = true;
     $("postcard-ar-note").hidden = true;
     panel.hidden = false;
     if (storyButton) storyButton.hidden = true;
-    clueButton.hidden = photoButton.hidden = true;
+    clueButton.hidden = photoButton.hidden = replayButton.hidden = true;
+    replayButton.onclick = art.replay;
     clueButton.setAttribute("aria-expanded", "false");
     photoButton.setAttribute("aria-pressed", "false");
     photoButton.onclick = () => {
@@ -587,7 +590,9 @@
         postcardRecognized ||= Boolean(recognized);
         if (storyButton) storyButton.hidden = !postcardRecognized;
         clueButton.hidden = photoButton.hidden = !postcardRecognized;
+        replayButton.hidden = !postcardRecognized || matchMedia("(prefers-reduced-motion: reduce)").matches;
         photoButton.disabled = !visible;
+        replayButton.disabled = !visible;
         const status = visible ? "纸上场景已展开。试着轻轻倾斜纸卡，或点亮卡面上的线索。"
           : !failed && postcardRecognized ? "把正面旧照移回画面，继续看纸上场景。" : message;
         if (scanStatus.textContent !== status) scanStatus.textContent = status;
