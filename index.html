@@ -10,7 +10,8 @@
   <link rel="preconnect" href="https://tiles.openfreemap.org" />
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
   <link rel="stylesheet" href="style.css?v=26" />
-  <link rel="stylesheet" href="trail.css?v=5" />
+  <link rel="stylesheet" href="trail.css?v=6" />
+  <link rel="stylesheet" href="postcard.css?v=3" />
 </head>
 <body>
   <header class="site-header">
@@ -407,6 +408,21 @@
     </div>
   </aside>
   <dialog id="trail-dialog" class="trail-dialog" aria-labelledby="trail-dialog-title"><div id="trail-dialog-content"></div></dialog>
+  <dialog id="postcard-preview" class="trail-dialog" aria-labelledby="postcard-preview-title">
+    <div class="postcard-preview-content">
+      <div class="trail-dialog-head"><div><p class="trail-kicker">带一张纸卡出发</p><h2 id="postcard-preview-title">路线明信片</h2></div>
+        <form method="dialog"><button type="submit" class="trail-dialog-close" aria-label="关闭明信片预览">×</button></form>
+      </div>
+      <p id="postcard-preview-note" class="trail-note"></p>
+      <div id="postcard-preview-pages"></div>
+      <p class="trail-note">按正面、背面依次打印。用 A6 横向纸张时，双面打印可选短边翻转。</p>
+      <div class="trail-actions">
+        <button id="postcard-print-all" class="trail-btn trail-primary" type="button">打印整套 / 另存 PDF</button>
+        <button id="postcard-demo" class="trail-btn" type="button">试扫这张明信片 · 无需定位</button>
+      </div>
+    </div>
+  </dialog>
+  <section id="postcard-print" aria-label="可打印的双面明信片"></section>
   <section id="gusu-ar" hidden aria-label="空间 AR">
     <div class="gusu-ar-header">
       <div><b id="gusu-ar-place"></b><p id="gusu-ar-credit"></p></div>
@@ -426,9 +442,12 @@
   <footer><span>GUSU HISTORIC PHOTOGRAPH FIELD PROJECT</span><span>现代重拍 © 古城阳面 · 仅限 HER Lab 教学及学生毕业成果使用</span></footer>
   <script src="vendor/maplibre-gl.js"></script>
   <script src="app.js?v=26"></script>
-  <script src="trail-data.js?v=1"></script>
+  <script src="trail-data.js?v=2"></script>
   <script src="spatial-ar.js?v=1"></script>
-  <script src="trail.js?v=6"></script>
+  <script src="postcard-print.js?v=5"></script>
+  <script src="postcard-scan.js?v=4"></script>
+  <script src="postcard-ar.js?v=1"></script>
+  <script src="trail.js?v=10"></script>
 </body>
 </html>
 

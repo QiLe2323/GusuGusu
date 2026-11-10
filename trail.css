@@ -92,6 +92,12 @@ body {background:var(--trail-paper)}
 .trail-schematic-points {position:relative;width:min(100%,490px);aspect-ratio:400/230}
 .trail-schematic-points>svg {display:block;width:100%;height:100%}
 .trail-schematic-points>.place-pin {position:absolute;transform:translate(-50%,-50%)}
+.trail-cluster-pin {
+  min-width:44px;min-height:44px;padding:0 9px;border:3px solid #fffaf0;border-radius:50%;
+  background:var(--trail-green);color:white;font:700 15px var(--trail-mono);
+  box-shadow:0 2px 8px #173f3450;cursor:pointer;z-index:2;
+}
+.trail-schematic-points>.trail-cluster-pin {position:absolute;transform:translate(-50%,-50%)}
 .trail-map-caption {position:absolute;left:0;bottom:0;width:100%;margin:0;padding:8px 10px;background:#e2e9dd;color:#304c3f;font-size:.73rem;line-height:1.4}
 #trail-map .maplibregl-ctrl-group {overflow:hidden;border:1px solid #d8dbd0;box-shadow:0 3px 12px #202e2919;border-radius:9px}
 #trail-map .maplibregl-ctrl-group button {background-color:var(--trail-sheet)}
@@ -201,6 +207,9 @@ footer {border-top:1px solid var(--trail-line);color:var(--trail-muted)}
   .trail-archive {padding-top:0}
 }
 @media(max-width:680px) {
+  .site-header,.trail-dialog::backdrop {backdrop-filter:none}
+  .trail-route-card {transition:none}
+  .trail-route-card:hover {transform:none}
   .site-header {height:64px;padding-inline:max(12px,env(safe-area-inset-left))}
   .site-header .brand-mark {width:34px;height:34px}
   .site-header .brand strong {font-size:16px}
@@ -223,6 +232,7 @@ footer {border-top:1px solid var(--trail-line);color:var(--trail-muted)}
   .trail-map-dock .trail-btn {padding-inline:4px;font-size:.8rem}
   .trail-session-controls .trail-mobile-map-link {display:inline-flex}
   :is(#map,#trail-map,#trail-schematic) .place-pin.photo-pin {width:43px;height:40px}
+  :is(#trail-map,#trail-schematic) .place-pin.photo-pin {filter:none}
   #map.markers-compact .place-pin.photo-pin {width:43px;height:40px}
   :is(#map,#trail-map,#trail-schematic) .place-pin.photo-pin:not(.is-visited) .photo-pin-frame {
     display:block;inset:0 2px 5px;width:auto;height:auto;border-width:2px;border-radius:7px

@@ -90,3 +90,19 @@ const trailClues = {
     story: "老照片从百步桥向东取景，屋檐与岸线一同指向河道深处。重拍的树荫和墙面改变了画面边缘，河道仍是重找视角的线索。"
   }
 };
+
+// The order of choices is varied so the position of the answer is not a clue.
+const trailObservations = {
+  guanqian: { question: "站在步行区望向远处，哪一组线条最能帮你判断老照片的朝向？", choices: ["两侧店面向远处收拢的边线", "某家店今天的招牌", "路过行人的走向"], answer: 0 },
+  xuanmiao: { question: "抬头看山门。屋檐伸到最外侧时，轮廓是什么样？", choices: ["完全水平", "往上挑起", "向下垂落"], answer: 1 },
+  miluo: { question: "看向原来楼阁占据的那片视野，今天最显眼的组合是什么？", choices: ["一栋通体玻璃的高楼", "仍是高大的重檐楼阁", "低矮建筑、围栏和树冠"], answer: 2 },
+  xuanqiao: { question: "从巷口看进去，哪两条线最能帮你判断巷子的纵深？", choices: ["两侧墙脚", "两扇窗的上沿", "同一面墙上的两块门牌"], answer: 0 },
+  lujia: { question: "沿巷向前看，当年桥下水面所在的位置，如今主要是什么？", choices: ["宽阔湖面", "可通行的巷道", "架空的桥面"], answer: 1 },
+  pingjiang: { question: "看步道与河道的走向，它们的关系是什么？", choices: ["步道离开水岸向上爬升", "步道直穿水面", "步道贴着水岸延伸"], answer: 2 },
+  wuwang: { question: "对照桥身，今天在桥侧容易辨认的细节是什么？", choices: ["沿桥侧经过的管线", "贯穿桥面的大树", "伸入水面的船桨"], answer: 0 },
+  twinpagodas: { question: "从巷道向上看，能用来辨认方位的两座塔尖有什么特征？", choices: ["两座塔尖高低相同", "两座塔尖一高一低", "两座塔尖都藏在地面以下"], answer: 1 },
+  shiquan: { question: "沿人行道看去，什么排成一列，能帮你找到旧照的街道方向？", choices: ["横穿路面的车辆", "同一扇橱窗的反光", "街边的树干"], answer: 2 },
+  xingzao: { question: "站在桥上，哪一处最能提示人过去如何接近水面？", choices: ["临水处的台阶、开口或平台", "远处的云", "高过屋檐的电线"], answer: 0 },
+  wuyachang: { question: "看看对岸，房屋的墙脚和水面是什么关系？", choices: ["中间隔着一条宽马路", "墙脚或临水平台靠近水面", "房屋悬空在河中央"], answer: 1 },
+  brickbridge: { question: "从百步桥向东望，哪条线最能帮你找回旧照片的方向？", choices: ["路人的行走方向", "近处树枝晃动的方向", "河道向远处收窄的方向"], answer: 2 }
+};
