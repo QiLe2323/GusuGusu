@@ -30,6 +30,7 @@
   let revealed = false;
   let cameraTask = null;
   let postcardScan = null;
+  let postcardArt = null;
   let postcardRecognized = false;
   let watchId = null;
   let watchVersion = 0;
@@ -444,6 +445,7 @@
         ${fieldWalk ? `<button type="button" class="trail-btn trail-primary" data-card="${id}" data-walk="${fieldWalk.id}" data-kind="field">查看现场卡片</button>` : ""}
         ${previewWalk ? `<button type="button" class="trail-btn" data-card="${id}" data-walk="${previewWalk.id}" data-kind="preview">查看线上卡片</button>` : ""}
         ${walks.map(walk => `<button type="button" class="trail-btn" data-map-route="${walk.id}">${walk === route ? "继续当前路线" : walk.name} →</button>`).join("")}
+        ${photoLocked ? "" : `<button type="button" class="trail-btn" data-action="postcard-gallery" data-scan-place="${id}">看明信片动画</button>`}
         ${photoLocked ? "" : `<button type="button" class="trail-btn" data-archive-place="${id}">古今照片对照</button>`}
       </div>`;
     showDialog();
@@ -480,7 +482,8 @@
         <button type="button" class="trail-region" data-action="reveal" aria-label="查看照片里的线索" aria-controls="trail-reveal" aria-expanded="false" style="--x:${x}%;--y:${y}%;--w:${width}%;--h:${height}%"><span aria-hidden="true">+</span></button>
         </div><figcaption>${place.oldCredit}</figcaption></figure>
         <figure id="trail-modern"><img ${field ? "data-src" : "src"}="${place.nowPhoto}" alt="${place.cn}现代重拍"><figcaption>${place.nowCredit}</figcaption></figure></div>
-      ${field ? "" : '<p class="trail-note trail-photo-hint">找到细节了吗？点照片里的标记看看。</p><button type="button" class="trail-btn" data-action="reveal">揭示照片线索</button>'}
+      ${field ? "" : `<p class="trail-note trail-photo-hint">找到细节了吗？点照片里的标记看看。</p><div class="trail-actions"><button type="button" class="trail-btn" data-action="reveal">揭示照片线索</button>
+        <button type="button" class="trail-btn" data-action="postcard-gallery" data-scan-place="${id}">看明信片动画</button></div>`}
       <section id="trail-reveal" class="trail-reveal" hidden><p class="trail-kicker">你发现了 / DISCOVERED</p><h3 tabindex="-1">${clue.label}</h3><p>${clue.story}</p>
       ${field ? '<div id="trail-camera-options" class="trail-actions" hidden><button type="button" class="trail-btn" data-action="spatial-ar">空间 AR 放置旧照</button><button type="button" class="trail-btn" data-action="camera">手动叠加</button></div><p id="trail-ar-status" class="trail-note" tabindex="-1" role="status"></p>' : ""}
       <label for="trail-note-input">写下一句发现 <small>可选</small></label><textarea id="trail-note-input" rows="2" maxlength="140" placeholder="我注意到……"></textarea>
@@ -502,25 +505,31 @@
           <button type="button" class="trail-btn" data-action="postcard-clue" aria-expanded="false" aria-controls="postcard-ar-note" hidden>卡面线索</button>
           <button type="button" class="trail-btn" id="postcard-ar-photo-toggle" aria-pressed="false" hidden>今日重拍</button>
           <button type="button" class="trail-btn" id="postcard-ar-replay" hidden>重播展开</button>
+          <button type="button" class="trail-btn" id="postcard-ar-feature" aria-pressed="false" hidden>特色互动</button>
           ${field ? '<button type="button" class="trail-btn trail-primary" data-action="open-scanned-story" hidden>查看古今与记录 →</button>' : ""}
         </div>
       </section>`;
   }
 
-  function openPostcardDemo(id) {
+  function openPostcardDemo(id, focusPicker = false) {
     const place = byId.get(id);
-    const clue = trailClues[id];
-    if (!place || !clue) return;
+    if (!place) return;
+    const clue = trailClues[id] || postcardScenes[id];
     stopPostcardScan();
     task = null;
     content.innerHTML = `<div class="trail-dialog-head"><div><p class="trail-kicker">明信片 AR · 无需定位</p>
       <h2 id="trail-dialog-title" tabindex="-1">试扫${place.cn}明信片</h2></div>
       <button type="button" class="trail-dialog-close" data-action="close" aria-label="关闭">×</button></div>
+      <label class="postcard-scene-choice">选择旧照<select id="postcard-scene-choice">${places.map((item, index) =>
+        `<option value="${item.id}" ${item.id === id ? "selected" : ""}>${String(index + 1).padStart(2, "0")} · ${item.cn}</option>`).join("")}</select></label>
       <p class="trail-task-prompt">对准纸卡正面的旧照。手边没有纸卡，也可以用另一台设备打开下方的试扫图，再用手机对准屏幕。</p>
       <div class="trail-actions"><button type="button" class="trail-btn trail-primary" data-action="scan-postcard" data-scan-place="${place.id}">打开相机试扫</button>
+      <button type="button" class="trail-btn" data-action="preview-postcard" data-scan-place="${place.id}">直接预览动画</button>
+      <a class="trail-btn" href="pingjiang-preview.html?place=${place.id}">打开纸艺动画 ↗</a>
       <a class="trail-btn" href="${place.oldPhoto}" target="_blank" rel="noopener">打开试扫图 ↗</a></div>
       ${postcardScannerMarkup(clue)}`;
     showDialog();
+    if (focusPicker) $("postcard-scene-choice").focus();
   }
 
   function revealTask(showPhotos = true) {
@@ -544,6 +553,8 @@
   }
 
   function stopPostcardScan() {
+    postcardArt?.dispose();
+    postcardArt = null;
     postcardScan?.stop();
     postcardScan = null;
     postcardRecognized = false;
@@ -551,21 +562,32 @@
     if (panel) panel.hidden = true;
   }
 
-  function openPostcardScan(demoId) {
+  function openPostcardScan(demoId, preview = false) {
     const field = task?.mode === "field";
     const place = byId.get(field ? task.id : demoId);
-    if (!place || postcardScan) return;
+    if (!place) return;
     const panel = $("postcard-scanner");
     const video = panel.querySelector("video");
-    const art = createPostcardAR(video.parentElement, place, trailClues[place.id]);
+    const view = video.parentElement;
+    if (postcardScan && view.classList.contains("is-preview") === preview) return;
+    stopPostcardScan();
+    view.classList.toggle("is-preview", preview);
+    const art = createPostcardAR(view, place, trailClues[place.id] || postcardScenes[place.id]);
+    postcardArt = art;
     const storyButton = panel.querySelector('[data-action="open-scanned-story"]');
     const clueButton = panel.querySelector('.postcard-scan-actions [data-action="postcard-clue"]');
     const photoButton = $("postcard-ar-photo-toggle");
     const replayButton = $("postcard-ar-replay");
+    const featureButton = $("postcard-ar-feature");
+    featureButton.hidden=true;
+    featureButton.setAttribute('aria-pressed','false');
+    featureButton.onclick=()=>featureButton.setAttribute('aria-pressed',String(art.toggleDetail()));
+    const closeButton = panel.querySelector('[data-action="stop-postcard-scan"]');
     const scanStatus = $("postcard-scan-status");
     if (field) $("postcard-quiz").hidden = true;
     $("postcard-ar-note").hidden = true;
     panel.hidden = false;
+    closeButton.textContent = preview ? "关闭预览" : "关闭相机";
     if (storyButton) storyButton.hidden = true;
     clueButton.hidden = photoButton.hidden = replayButton.hidden = true;
     replayButton.onclick = art.replay;
@@ -576,28 +598,45 @@
       photoButton.setAttribute("aria-pressed", String(show));
       art.showPhoto(show);
     };
-    scanStatus.textContent = "正在开启相机…";
     let aspect;
-    postcardScan = scanPostcard({
-      imageUrl: place.oldPhoto,
-      video,
-      field,
-      update({ message, corners, recognized, failed, referenceAspect }) {
-        if (failed) postcardScan = null;
-        if (referenceAspect) aspect = referenceAspect;
-        if (video.videoWidth) video.parentElement.style.setProperty("--scan-ratio", video.videoWidth / video.videoHeight);
-        const visible = art.update(corners, aspect);
-        postcardRecognized ||= Boolean(recognized);
-        if (storyButton) storyButton.hidden = !postcardRecognized;
-        clueButton.hidden = photoButton.hidden = !postcardRecognized;
-        replayButton.hidden = !postcardRecognized || matchMedia("(prefers-reduced-motion: reduce)").matches;
-        photoButton.disabled = !visible;
-        replayButton.disabled = !visible;
-        const status = visible ? "纸上场景已展开。试着轻轻倾斜纸卡，或点亮卡面上的线索。"
-          : !failed && postcardRecognized ? "把正面旧照移回画面，继续看纸上场景。" : message;
-        if (scanStatus.textContent !== status) scanStatus.textContent = status;
-      }
-    });
+    function update({ message, corners, recognized, failed, referenceAspect }) {
+      if (failed) postcardScan = null;
+      if (referenceAspect) aspect = referenceAspect;
+      if (video.videoWidth) view.style.setProperty("--scan-ratio", video.videoWidth / video.videoHeight);
+      const visible = art.update(corners, aspect);
+      postcardRecognized ||= Boolean(recognized);
+      if (storyButton) storyButton.hidden = !postcardRecognized;
+      clueButton.hidden = photoButton.hidden = !postcardRecognized;
+      replayButton.hidden = !postcardRecognized || matchMedia("(prefers-reduced-motion: reduce)").matches;
+      photoButton.disabled = !visible;
+      replayButton.disabled = !visible;
+      featureButton.disabled = !visible;
+      const status = visible ? (preview ? "动画预览 · 可重播展开，或点亮卡面上的线索。" : "纸上场景已展开。试着轻轻倾斜纸卡，或点亮卡面上的线索。")
+        : !failed && postcardRecognized ? "把正面旧照移回画面，继续看纸上场景。" : message;
+      if (scanStatus.textContent !== status) scanStatus.textContent = status;
+    }
+    if (preview) {
+      const archive = view.querySelector(".postcard-ar-archive img");
+      const render = () => {
+        if (!view.clientWidth || !view.clientHeight) return;
+        const ratio = archive.naturalWidth / archive.naturalHeight || 1.5;
+        const height = Math.min(.62, .69 * view.clientWidth / view.clientHeight / ratio);
+        const width = height * ratio * view.clientHeight / view.clientWidth;
+        const left = (1 - width) / 2;
+        const right = 1 - left;
+        const top = .82 - height;
+        const corners = [[left + .025, top + .055], [right - .02, top], [right + .01, .81], [left - .025, .855]];
+        update({ corners, recognized: true, referenceAspect: ratio });
+      };
+      const observer = new ResizeObserver(render);
+      observer.observe(view);
+      archive.addEventListener("load", render);
+      postcardScan = { stop() { observer.disconnect(); archive.removeEventListener("load", render); } };
+      render();
+    } else {
+      scanStatus.textContent = "正在开启相机…";
+      postcardScan = scanPostcard({ imageUrl: place.oldPhoto, video, field, update });
+    }
     panel.scrollIntoView({ block: "nearest" });
   }
 
@@ -773,11 +812,15 @@
       case "locate": startLocation(); break;
       case "close": dialog.close(); break;
       case "reveal": revealTask(); break;
+      case "postcard-gallery": openPostcardDemo(button.dataset.scanPlace || "pingjiang"); break;
+      case "preview-postcard": openPostcardScan(button.dataset.scanPlace, true); break;
       case "scan-postcard": openPostcardScan(button.dataset.scanPlace); break;
-      case "stop-postcard-scan":
+      case "stop-postcard-scan": {
+        const trigger = $("postcard-scanner").querySelector(".is-preview") ? "preview-postcard" : "scan-postcard";
         stopPostcardScan();
-        content.querySelector('[data-action="scan-postcard"]').focus();
+        content.querySelector(`[data-action="${trigger}"]`).focus();
         break;
+      }
       case "postcard-clue": {
         if (!postcardRecognized) break;
         const note = $("postcard-ar-note");
@@ -889,6 +932,9 @@
     if (button.dataset.action) perform(button.dataset.action, button);
   });
   dialog.addEventListener("close", stopPostcardScan);
+  dialog.addEventListener("change", event => {
+    if (event.target.id === "postcard-scene-choice") openPostcardDemo(event.target.value, true);
+  });
   $("postcard-demo").addEventListener("click", event => {
     $("postcard-preview").close();
     openPostcardDemo(event.currentTarget.dataset.postcardDemo);

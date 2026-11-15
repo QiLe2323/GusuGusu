@@ -6,26 +6,56 @@
 .postcard-choices { display: grid; gap: 8px; }
 .postcard-task-panel { padding: 14px; margin-top: 12px; border: 1px solid var(--trail-line); border-radius: 12px; }
 .postcard-task-panel > p:first-child { margin-top: 0; }
+.postcard-atlas-entry { width: 100%; margin: 12px 0 0; }
+.postcard-scene-choice { display: grid; gap: 6px; margin-bottom: 14px; color: var(--trail-muted); font-size: .82rem; font-weight: 700; }
+.postcard-scene-choice select {
+  min-height: 44px; padding: 0 10px; border: 1px solid var(--trail-line); border-radius: 8px;
+  color: var(--trail-ink); background: var(--trail-sheet); font: inherit;
+}
 .postcard-scan-view {
   position: relative; width: min(100%, calc(52dvh * var(--scan-ratio, 1.333)));
   aspect-ratio: var(--scan-ratio, 1.333); margin-inline: auto; border-radius: 8px;
   overflow: hidden; background: #1b2420;
 }
 .postcard-scan-view video, .postcard-ar-scene { position: absolute; inset: 0; width: 100%; height: 100%; }
+.postcard-scan-view.is-preview {
+  width: 100%; aspect-ratio: 1.15;
+  background: radial-gradient(ellipse at 39% 14%,#576356,#2f4138 60%,#172b25);
+}
+.postcard-scan-view.is-preview::before {
+  content: ""; position: absolute; inset: 9px; border: 1px solid #d1c09140; border-radius: 5px; pointer-events: none;
+}
+.postcard-scan-view.is-preview video { display: none; }
 .postcard-ar-scene { pointer-events: none; }
+.has-pingjiang-diorama > :is(.postcard-ar-archive,.postcard-ar-ground,.postcard-ar-building,.postcard-ar-detail) { visibility: hidden; }
+.has-pingjiang-diorama > .pingjiang-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.is-preview .has-pingjiang-diorama > .pingjiang-canvas { pointer-events: auto; touch-action: none; cursor: grab; }
+.has-pingjiang-diorama > .postcard-ar-photo { z-index: 2; }
+.has-pingjiang-diorama > :is(.postcard-ar-title,.postcard-ar-marker) { z-index: 3; }
 .postcard-ar-plane {
   position: absolute; inset: 0 auto auto 0; width: 100px; height: 100px; margin: 0;
   transform-origin: 0 0; backface-visibility: hidden; transition: transform 145ms ease-out;
 }
-.postcard-ar-ground, .postcard-ar-building { width: 180px; }
-.postcard-ar-plane svg, .postcard-ar-building img, .postcard-ar-paper {
+.postcard-ar-ground, .postcard-ar-building, .postcard-ar-archive { width: 180px; }
+.postcard-ar-plane svg, .postcard-ar-building img, .postcard-ar-paper, .postcard-ar-fold {
   display: block; width: 100%; height: 100%; transform-origin: center bottom;
+}
+.postcard-ar-archive { opacity: .52; border: 1px solid #d5bb85; }
+.postcard-ar-archive img { display: block; width: 100%; height: 100%; object-fit: fill; filter: sepia(.24); }
+.postcard-ar-archive i, .postcard-ar-gilding {
+  position: absolute; inset: 0; opacity: 0; background: linear-gradient(113deg,transparent 38%,#ffdc9cbf 51%,transparent 62%) 125% 0 / 240% 100%;
+}
+.is-preview .postcard-ar-archive { opacity: 1; box-shadow: 0 0 0 5px #dfd3b4, 0 6px 0 5px #b5a483, 0 10px 17px 4px #17251e; }
+.postcard-ar-fold { position: relative; }
+.postcard-ar-gilding {
+  mask: var(--postcard-art) center bottom / contain no-repeat;
+  -webkit-mask: var(--postcard-art) center bottom / contain no-repeat;
 }
 .postcard-ar-plane svg { overflow: visible; }
 .postcard-ar-building img { object-fit: contain; object-position: center bottom; filter: drop-shadow(0 4px 2px #1f2a20a8); }
 .postcard-ar-paper {
   position: relative; isolation: isolate; overflow: hidden; border: 1px solid #dbbf89;
-  border-radius: 2px 2px 5px 5px; background: linear-gradient(168deg,#786d56ed,#dbc9a1f5 65%,#b2986cf5);
+  border-radius: 2px 2px 5px 5px; background: linear-gradient(168deg,#70634be8,#bba47cdd 65%,#8d7455f5);
   box-shadow: inset 0 -3px #a58b5a7d, 0 2px #876c4d, 0 4px #e9ce9c, 0 8px 8px #1c2625a6;
 }
 .postcard-ar-paper::after { content: ""; position: absolute; inset: 5px; border: 1px solid #f3dbac68; border-radius: 2px; }
@@ -41,14 +71,42 @@
 .postcard-ar-scene .paper-boat-wake { animation-delay: -500ms; }
 .postcard-ar-scene .paper-lanterns { transform-origin: 50% 20%; animation: postcard-sway 3.8s ease-in-out infinite alternate; }
 .postcard-ar-scene .paper-lantern-light { animation: postcard-light 3.6s ease-in-out infinite alternate; }
+.paper-mist { fill: #e6ead8; opacity: .32; filter: blur(2.4px); animation: postcard-mist 7s ease-in-out infinite alternate; }
+.paper-daylight { fill: #f6e5ad; opacity: .35; filter: blur(1.5px); animation: postcard-light 6s ease-in-out infinite alternate; }
+.paper-dust { fill: none; stroke: #f9dd9e; stroke-width: 2.1; stroke-linecap: round; animation: postcard-dust 6s ease-in-out infinite alternate; }
+.paper-trace { fill: none; stroke: #ffe3a4; stroke-width: .95; stroke-linecap: round; filter: drop-shadow(0 0 1px #a87936); }
+.paper-trace path[pathLength] { stroke-dasharray: 1; animation: postcard-trace 5.8s ease-in-out infinite; }
+.paper-trace path:nth-child(2) { opacity: .58; animation-delay: 300ms; }
+.paper-ring { fill: none; stroke: #f7e6ba; stroke-width: .9; transform-origin: 46% 58%; animation: postcard-ring 4.4s ease-out infinite; }
+.paper-ring ellipse:nth-child(2) { opacity: .66; }
+.paper-ring ellipse:nth-child(3) { opacity: .31; }
+.paper-reflection { fill: none; stroke: #f4ddac; stroke-width: 2.6; stroke-linecap: round; animation: postcard-reflection 6s ease-in-out infinite alternate; }
+.paper-reflection path:last-child { opacity: .48; }
+.paper-window rect { fill: #ffe6a5; filter: drop-shadow(0 0 4px #ffc66f); opacity: .55; animation: postcard-light 3.7s ease-in-out infinite alternate; }
+.paper-window rect:nth-child(2) { animation-delay: 280ms; }
+.paper-window rect:nth-child(3) { animation-delay: 560ms; }
+.paper-banners { fill: #a3533e; stroke: #d7b175; stroke-width: .8; transform-origin: center 25%; animation: postcard-sway 3.4s ease-in-out infinite alternate; }
+.paper-leaf-fall { fill: #b5a16c; stroke: #f1dfa0; stroke-width: .65; animation: postcard-leaves 6s ease-in-out infinite alternate; }
 @keyframes postcard-water { from { transform: translate(-4%, 1%); } to { transform: translate(4%, 5%); opacity: .27; } }
 @keyframes postcard-drift { from { transform: translate(-5px, 1px); } to { transform: translate(16px, -2px); } }
 @keyframes postcard-sway { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
 @keyframes postcard-light { to { opacity: .46; } }
+@keyframes postcard-mist { from { transform: translate(-12%, 4%); } to { transform: translate(15%, -5%); opacity: .12; } }
+@keyframes postcard-dust { to { transform: translate(12%, -12%); opacity: .25; } }
+@keyframes postcard-trace { 0%, 7% { stroke-dashoffset: 1; opacity: 0; } 35%, 73% { stroke-dashoffset: 0; opacity: 1; } 100% { opacity: 0; } }
+@keyframes postcard-ring { from { transform: scale(.35); opacity: .85; } to { transform: scale(1.18); opacity: 0; } }
+@keyframes postcard-reflection { from { transform: translateX(-8%) scaleY(.85); opacity: .3; } to { transform: translateX(8%); opacity: .83; } }
+@keyframes postcard-leaves { from { transform: translate(-13%, -16%) rotate(-7deg); } to { transform: translate(10%, 14%) rotate(9deg); opacity: .5; } }
 @media (prefers-reduced-motion: reduce) {
   .postcard-ar-plane, .postcard-ar-marker { transition: none; }
-  .postcard-ar-scene :is(.paper-boat,.paper-boat-wake,.paper-lanterns,.paper-lantern-light,i) { animation: none; }
+  .postcard-ar-scene *, .postcard-ar-scene .postcard-ar-ground.is-water i { animation: none !important; }
 }
+.postcard-ar-title {
+  position: absolute; left: 12px; bottom: 13px; display: grid; gap: 2px; max-width: 55%;
+  padding: 6px 10px; border-left: 2px solid #d9ae75; background: #192b23e8; color: #fff0ce;
+}
+.postcard-ar-title b { font: 700 clamp(.87rem,2.6vw,1.06rem)/1.25 var(--trail-serif); letter-spacing: .12em; }
+.postcard-ar-title small { font-size: .63rem; color: #e4d4ad; }
 .postcard-ar-photo {
   width: 140px; padding: 4px; border: 1px solid #cfb57c; border-radius: 4px; background: #f8edcc;
   box-shadow: 0 3px 8px #121e1ab0; display: grid; grid-template-rows: minmax(0, 1fr) auto;
@@ -56,15 +114,14 @@
 .postcard-ar-photo img { width: 100%; height: 100%; object-fit: contain; background: #e8ddbf; }
 .postcard-ar-photo figcaption { padding-top: 3px; color: #355048; text-align: center; font-size: 11px; font-weight: 750; }
 .postcard-ar-marker {
-  position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 6px;
-  width: max-content; min-height: 44px; padding: 5px 10px 5px 5px; border: 1px solid #e8c98b;
-  border-radius: 24px; color: #fff4d5; background: #253930; box-shadow: 0 4px 16px #18261f95;
-  font: inherit; font-size: .72rem; font-weight: 750; line-height: 1.25; cursor: pointer; pointer-events: auto;
+  position: absolute; transform: translate(-50%, -50%); display: grid; place-items: center;
+  width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: transparent;
+  font: inherit; cursor: pointer; pointer-events: auto;
   transition: left 145ms ease-out, top 145ms ease-out;
 }
 .postcard-ar-marker span:first-child {
-  display: grid; place-items: center; width: 27px; height: 27px; border: 1px solid #f4d698;
-  border-radius: 50%; color: #ffdc97; background: #ba7e4e45; font-size: 16px;
+  display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid #f4d698;
+  border-radius: 50%; color: #ffdc97; background: #31483a; font-size: 16px; box-shadow: 0 2px 10px #18261f95;
 }
 .postcard-ar-note { padding: 12px 14px; margin-bottom: 12px; border-left: 2px solid #ac844b; background: var(--trail-wash); }
 .postcard-ar-note h3 { margin: 0; font-family: var(--trail-serif); }
