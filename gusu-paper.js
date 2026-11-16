@@ -1,4 +1,4 @@
-import { createPaperPostcard as createPingjiangPaper } from './pingjiang-paper.js?v=1';
+import { createPaperPostcard as createPingjiangPaper } from './pingjiang-paper.js?v=2';
 import { paperScenes } from './gusu-paper-scenes.js?v=1';
 import { paperLayout } from './gusu-paper-layout.js?v=1';
 
@@ -74,7 +74,9 @@ export function createPaperPostcard(container, { placeId = 'pingjiang', tracking
     entrance=layers.map((layer,i)=>layer.animate([{opacity:0,transform:from},{opacity:1,transform:'none'}],{duration:1100+i*130,delay:i*250,easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'}));
   }
   Promise.all(layers.map(layer=>new Promise((resolve,reject)=>{
-    const image=layer.querySelector('img');image.onload=resolve;image.onerror=()=>reject(new Error('Missing paper layer '+placeId+'/'+layer.dataset.name));
+    const image=layer.querySelector('img');image.decoding='async';
+    image.onload=()=>{if(!disposed&&layer.dataset.name==='backdrop'){message.hidden=true;host.dataset.ready='partial'}resolve()};
+    image.onerror=()=>reject(new Error('Missing paper layer '+placeId+'/'+layer.dataset.name));
     image.src=new URL(`./images/paper-gusu/${placeId}/${layer.dataset.name}.webp`,import.meta.url).href;
   }))).then(()=>{if(disposed)return;ready=true;host.dataset.ready='true';message.hidden=true;replay()}).catch(error=>{if(disposed)return;host.dataset.ready='error';message.textContent='纸艺素材暂时未加载完整，请刷新重试。';console.error(error)});
   function resize(){paper.style.width=Math.min(host.clientWidth,host.clientHeight*1.5)+'px'}

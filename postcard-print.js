@@ -7,7 +7,11 @@ async function printTrailPostcards(walk, getPlace, button) {
     const cards = await Promise.all(walk.ids.map(async (id, index) => {
       const place = getPlace(id);
       const clue = trailClues[id];
-      const image = await loadImage(place.oldPhoto);
+      // Open the preview without waiting for every photograph on the route.
+      const image = new Image();
+      image.decoding = "async";
+      image.loading = index === 0 ? "eager" : "lazy";
+      image.src = place.oldPhoto;
       const number = String(index + 1).padStart(2, "0");
       const pair = document.createElement("div");
       pair.innerHTML = `
@@ -52,12 +56,29 @@ async function printTrailPostcards(walk, getPlace, button) {
   }
 }
 
-document.getElementById("postcard-print-all").addEventListener("click", () => {
-  document.body.classList.add("printing-postcards");
+document.getElementById("postcard-print-all").addEventListener("click", async event => {
+  const button = event.currentTarget;
+  const label = button.textContent;
+  button.disabled = true;
+  button.textContent = "正在加载打印照片…";
+  let timeout;
   try {
+    const images = [...document.querySelectorAll('#postcard-print img')];
+    images.forEach(image => image.loading = 'eager');
+    await Promise.race([
+      Promise.all(images.map(image => image.decode())),
+      new Promise((_, reject) => { timeout = setTimeout(() => reject(new Error('timeout')), 15000); })
+    ]);
+    if (!document.getElementById('postcard-preview').open) return;
+    document.body.classList.add("printing-postcards");
     window.print();
   } catch {
     document.body.classList.remove("printing-postcards");
+    document.getElementById('postcard-preview-note').textContent = '打印照片尚未加载完整，请检查网络后重试。';
+  } finally {
+    clearTimeout(timeout);
+    button.disabled = false;
+    button.textContent = label;
   }
 });
 

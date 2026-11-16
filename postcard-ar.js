@@ -77,7 +77,7 @@ function createPostcardAR(view, place, clue) {
   scene.classList.remove('has-pingjiang-diorama');
   scene.dataset.motion = profile.motion;
   scene.innerHTML = `
-    <div class="postcard-ar-plane postcard-ar-archive"><img src="${place.oldPhoto}" alt=""><i></i></div>
+    <div class="postcard-ar-plane postcard-ar-archive"><img src="${view.classList.contains('is-preview') ? place.thumbPhoto : place.oldPhoto}" alt=""><i></i></div>
     <div class="postcard-ar-plane postcard-ar-ground ${profile.water ? "is-water" : ""}"><div class="postcard-ar-paper"><i></i></div></div>
     <div class="postcard-ar-plane postcard-ar-building"><div class="postcard-ar-fold"><img src="${artUrl}" alt="" draggable="false">
       <i class="postcard-ar-gilding" style="--postcard-art:url('${artUrl}')"></i></div></div>
@@ -113,7 +113,7 @@ function createPostcardAR(view, place, clue) {
   let lastPose;
   let stopped = false;
   {
-    import('./gusu-paper.js?v=1').then(module => {
+    import('./gusu-paper.js?v=2').then(module => {
       if (stopped) return;
       try {
         const preview = view.classList.contains('is-preview');

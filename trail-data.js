@@ -10,9 +10,9 @@ const trailRoutes = [
     ids: ["pingjiang", "wuwang", "twinpagodas", "xingzao"], cover: "twinpagodas"
   },
   {
-    id: "water", number: "03", name: "沿水而居", area: "十全街 → 百步桥", duration: "35–50 分钟",
-    description: "从林荫街走向河边，看街巷生活如何面向水。",
-    ids: ["shiquan", "xingzao", "wuyachang", "brickbridge"], cover: "wuyachang"
+    id: "water", number: "03", name: "沿水而居", area: "十全街 → 星造桥 → 吴衙场", duration: "建议预留 35–50 分钟",
+    description: "从街面走向河岸，观察旧照中的临水生活。地图连线仅示意站点顺序，步行通行与拍摄站位待实地核对。",
+    ids: ["shiquan", "xingzao", "wuyachang"], cover: "wuyachang"
   }
 ];
 

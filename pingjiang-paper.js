@@ -51,7 +51,8 @@ export function createPaperPostcard(container, { tracking = false } = {}) {
   }
   Promise.all(layers.map(layer => new Promise((resolve, reject) => {
     const image = layer.querySelector('img');
-    image.onload = resolve;
+    image.decoding = 'async';
+    image.onload = () => { if (!disposed && layer.dataset.name === 'backdrop') { message.hidden = true; host.dataset.ready = 'partial'; } resolve(); };
     image.onerror = () => reject(new Error('Missing paper layer: ' + layer.dataset.name));
     image.src = new URL(layer.dataset.name + '.webp', artwork).href;
   }))).then(() => {
