@@ -250,12 +250,61 @@ function updateTimeLens(event) { if (comparisonMode !== "lens") return; const re
 function stopHeroBlink() { if (heroBlinkTimer) clearInterval(heroBlinkTimer); heroBlinkTimer = null; heroBlinkVisible = true; el.heroOldWrap.style.opacity = 1; $("hero-blink-toggle").textContent = "Play flashback"; }
 function startHeroBlink() { stopHeroBlink(); $("hero-blink-toggle").textContent = "Pause flashback"; heroBlinkTimer = setInterval(() => { heroBlinkVisible = !heroBlinkVisible; el.heroOldWrap.style.opacity = heroBlinkVisible ? 1 : 0; }, 720); }
 function setHeroLensPosition(x, y) { el.heroOldWrap.style.clipPath = `circle(22% at ${x}% ${y}%)`; const lens = $("hero-lens-outline"); lens.style.left = `${x}%`; lens.style.top = `${y}%`; }
+const heroEraseMask = document.createElement('canvas');
+heroEraseMask.width = 1000;
+heroEraseMask.height = 750;
+const heroEraseContext = heroEraseMask.getContext('2d');
+let heroErasePointer = null, heroEraseLast = null;
+let heroEraseKeyboard = { x: 500, y: 375 };
+let heroEraseFrame = null;
+function applyHeroEraseMask() {
+  if (heroEraseFrame !== null) return;
+  heroEraseFrame = requestAnimationFrame(() => {
+    heroEraseFrame = null;
+    if (heroCompareMode !== 'erase') return;
+    el.heroOldWrap.style.maskImage = `url(${heroEraseMask.toDataURL()})`;
+    el.heroOldWrap.style.maskSize = '100% 100%';
+  });
+}
+function resetHeroErase() {
+  heroEraseContext.globalCompositeOperation = 'source-over';
+  heroEraseContext.fillStyle = '#fff';
+  heroEraseContext.fillRect(0, 0, 1000, 750);
+  heroEraseLast = null;
+  applyHeroEraseMask();
+}
+function eraseHeroPoint(point) {
+  const ctx = heroEraseContext;
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.lineWidth = 100;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo((heroEraseLast || point).x, (heroEraseLast || point).y);
+  ctx.lineTo(point.x, point.y);
+  ctx.stroke();
+  ctx.beginPath();ctx.arc(point.x, point.y, 50, 0, Math.PI * 2);ctx.fill();
+  heroEraseLast = point;
+  applyHeroEraseMask();
+}
+function heroErasePoint(event) {
+  const rect = $('hero-stage').getBoundingClientRect();
+  return { x: (event.clientX - rect.left) / rect.width * 1000, y: (event.clientY - rect.top) / rect.height * 750 };
+}
 function setHeroMode(mode) {
   stopHeroBlink(); heroCompareMode = mode; $("hero-stage").dataset.mode = mode;
   document.querySelectorAll("[data-hero-mode]").forEach(button => { const active = button.dataset.heroMode === mode; button.classList.toggle("is-active", active); button.setAttribute("aria-pressed", active); });
   $("hero-control-row").classList.toggle("has-control", mode === "fade" || mode === "blink");
   $("hero-opacity-control").classList.toggle("hidden", mode !== "fade");
   $("hero-blink-toggle").classList.toggle("hidden", mode !== "blink");
+  el.heroOldWrap.style.maskImage = '';
+  $('hero-erase-reset').hidden = mode !== 'erase';
+  heroErasePointer = null;
+  if (mode === 'erase') {
+    el.heroOldWrap.style.clipPath = 'inset(0)';
+    el.heroOldWrap.style.opacity = 1;
+    resetHeroErase();
+    $('hero-hint').textContent = '1930年代 → 2024 · 按住鼠标或用手指擦一擦，露出今天的街景。';
+  }
   el.heroOldWrap.style.transition = mode === "blink" ? "opacity .18s ease" : "";
   if (mode === "reveal") { el.heroOldWrap.style.opacity = 1; setCompare(Number(el.heroSlider.value), el.heroOldWrap, el.heroHandle); $("hero-hint").textContent = "1930年代 → 2024 · 轻轻滑动，穿过两段时光。"; }
   if (mode === "fade") { el.heroOldWrap.style.clipPath = "inset(0)"; el.heroOldWrap.style.opacity = $("hero-opacity").value; $("hero-hint").textContent = "1930s → 2024 · Adjust the ghost image to check alignment."; }
@@ -726,7 +775,7 @@ $("hero-opacity").addEventListener("input", event => { const value = Number(even
 $("hero-stage").addEventListener("pointermove", updateHeroLens); $("hero-stage").addEventListener("pointerdown", updateHeroLens);
 $("hero-blink-toggle").addEventListener("click", () => heroBlinkTimer ? stopHeroBlink() : startHeroBlink());
 el.tryDemoBtn.addEventListener("click", () => { $("hero-demo").scrollIntoView({behavior:"smooth",block:"center"}); $("hero-demo").animate([{transform:"scale(1)"},{transform:"scale(1.018)"},{transform:"scale(1)"}],{duration:700}); });
-$("guide-btn").addEventListener("click", openOnboarding); $("onboarding-skip").addEventListener("click", closeOnboarding); $("onboarding-next").addEventListener("click", advanceOnboarding);
+$("guide-btn").addEventListener("click", () => openComparisonIntro()); $("onboarding-skip").addEventListener("click", closeOnboarding); $("onboarding-next").addEventListener("click", advanceOnboarding);
 $("collection-btn").addEventListener("click", openCollection); $("open-route-btn").addEventListener("click", openCollection); $("collection-close").addEventListener("click", closeCollection); $("collection-scrim").addEventListener("click", closeCollection);
 $("show-route-btn").addEventListener("click", showSavedRoute); $("clear-route-btn").addEventListener("click", () => { savedPlaces.clear(); persistSavedPlaces(); updateSavedButton(); updateCollection(); updateMapSelectionCard(selectedPlace); }); el.savePlaceBtn.addEventListener("click", () => toggleSaved(selectedPlace));
 el.locateBtn.addEventListener("click",locateUser); el.nearestPlaceResult.addEventListener("click",() => { if (!nearestLocatedPlace) return; selectPlace(nearestLocatedPlace, true, true); }); el.remoteBtn.addEventListener("click",() => openRemote(selectedPlace)); el.startBtn.addEventListener("click",startField);
@@ -769,7 +818,7 @@ function openArchiveFromHash() {
   document.querySelector(location.hash).scrollIntoView();
 }
 window.addEventListener("hashchange", openArchiveFromHash);
-buildStories(); buildRouteStops(); renderDiscoveryBrowser(); updateVisited(); selectPlace(places[0], false, false); setHeroMode("reveal"); applyOverlayTransform(); updateAlignmentUI();
+buildStories(); buildRouteStops(); renderDiscoveryBrowser(); updateVisited(); selectPlace(places[0], false, false); setHeroMode("erase"); applyOverlayTransform(); updateAlignmentUI();
 openArchiveFromHash();
 
 
@@ -779,3 +828,57 @@ openArchiveFromHash();
 
 
 
+
+
+function openComparisonIntro() {
+  const intro = $("comparison-intro");
+  setHeroMode("erase");
+  if (!intro.open) intro.showModal();
+  document.body.classList.add("comparison-intro-open");
+  intro.querySelector('[data-close-intro]').focus({ preventScroll: true });
+}
+function closeComparisonIntro() {
+  $("comparison-intro").close();
+  document.body.classList.remove("comparison-intro-open");
+  stopHeroBlink();
+  try { localStorage.setItem('gusu-comparison-intro-erase-v2-seen', '1'); } catch {}
+  $("guide-btn").focus({ preventScroll: true });
+}
+document.querySelectorAll('[data-close-intro]').forEach(button => button.addEventListener('click', closeComparisonIntro));
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && $("comparison-intro").open) closeComparisonIntro();
+});
+try {
+  if (!localStorage.getItem('gusu-comparison-intro-erase-v2-seen')) openComparisonIntro();
+} catch { openComparisonIntro(); }
+
+$('hero-erase-reset').addEventListener('click', resetHeroErase);
+$('hero-stage').addEventListener('pointerdown', event => {
+  if (heroCompareMode !== 'erase' || (event.pointerType === 'mouse' && event.button !== 0)) return;
+  event.preventDefault();
+  heroErasePointer = event.pointerId;
+  heroEraseLast = null;
+  event.currentTarget.setPointerCapture(event.pointerId);
+  eraseHeroPoint(heroErasePoint(event));
+});
+$('hero-stage').addEventListener('pointermove', event => {
+  if (heroCompareMode === 'erase' && event.pointerId === heroErasePointer) eraseHeroPoint(heroErasePoint(event));
+});
+['pointerup','pointercancel','lostpointercapture'].forEach(type => $('hero-stage').addEventListener(type, () => {
+  heroErasePointer = null; heroEraseLast = null;
+}));
+$('hero-stage').addEventListener('keydown', event => {
+  if (heroCompareMode !== 'erase') return;
+  const moves = { ArrowLeft: [-45,0], ArrowRight: [45,0], ArrowUp: [0,-45], ArrowDown: [0,45], ' ': [0,0] };
+  const move = moves[event.key];
+  if (!move) return;
+  event.preventDefault();
+  heroEraseKeyboard.x = Math.max(0, Math.min(1000, heroEraseKeyboard.x + move[0]));
+  heroEraseKeyboard.y = Math.max(0, Math.min(750, heroEraseKeyboard.y + move[1]));
+  eraseHeroPoint({ ...heroEraseKeyboard });
+});
+
+$('comparison-intro').addEventListener('cancel', event => {
+  event.preventDefault();
+  closeComparisonIntro();
+});

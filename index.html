@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f5f3ec" />
-  <meta name="description" content="循着姑苏古城的历史照片，步行解锁线索，对照古今，收集个人探索手记。" />
+  <meta name="description" content="循着姑苏古城的历史照片，步行解锁线索，对照古今，收集个人我的足迹。" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23a54b38'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-size='38' fill='white'%3EG%3C/text%3E%3C/svg%3E" />
   <title>姑苏寻影 · Gusu, Past &amp; Present</title>
   <link rel="preconnect" href="https://tiles.openfreemap.org" />
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
   <link rel="stylesheet" href="style.css?v=26" />
-  <link rel="stylesheet" href="trail.css?v=6" />
+  <link rel="stylesheet" href="trail.css?v=16" />
   <link rel="stylesheet" href="postcard.css?v=6" />
 </head>
 <body>
@@ -20,8 +20,8 @@
       <span><strong>姑苏寻影</strong><small>GUSU FIELD NOTES</small></span>
     </a>
     <nav aria-label="主导航">
-      <a href="#trails" data-trail-jump>探索路线</a><a href="#trail-journal" data-trail-jump>探索手记</a>
-      <button id="guide-btn" class="header-tool" type="button" aria-label="查看探索指南">?</button>
+      <a href="#trails" data-trail-jump>探索路线</a><a href="#trail-journal" data-trail-jump>我的足迹</a>
+      <button id="guide-btn" class="header-tool" type="button" aria-label="查看古今对比示例">如何对比</button>
       <button id="collection-btn" class="progress-pill" type="button" aria-label="打开影像档案收藏"><span class="archive-label">影像收藏</span><b id="visited-count" hidden>0 / 20</b><span id="saved-count" hidden>0 saved</span></button>
     </nav>
   </header>
@@ -35,10 +35,14 @@
             <button id="trail-map-scope" class="trail-btn" type="button" data-action="map-scope" hidden></button>
           </div>
           <div id="trail-mobile-map-mount"></div>
+          <div class="map-search">
+            <label class="map-search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="map-search-input" type="search" placeholder="找一条街、一座桥…" aria-label="搜索地图地点" aria-controls="map-search-results" autocomplete="off"><button id="map-search-clear" type="button" aria-label="清空搜索" hidden>×</button></label>
+            <div id="map-search-results" class="map-search-results" aria-live="polite" hidden></div>
+          </div>
           <nav class="trail-map-dock" aria-label="探索地图导航">
-            <a href="#trails"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="17" r="2"/><circle cx="19" cy="7" r="2"/><path d="M7 17h7a3 3 0 0 0 0-6h-3a2 2 0 1 1 0-4h6"/></svg>路线</a>
-            <button id="trail-mobile-continue" class="trail-btn trail-primary" type="button" data-action="current-trail">开始探索 →</button>
-            <a href="#trail-journal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16H6a2 2 0 0 1 0-4h12M7 4a2 2 0 0 0-2 2v12m4-9h5"/></svg>手记</a>
+            <button type="button" class="map-dock-tool" data-action="postcard-gallery"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M7 8h10v8H7z"/></svg>扫明信片</button>
+            <button id="trail-mobile-continue" class="trail-btn trail-primary" type="button" data-action="current-trail">探索路线</button>
+            <a href="#trail-journal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16H6a2 2 0 0 1 0-4h12M7 4a2 2 0 0 0-2 2v12m4-9h5"/></svg>足迹</a>
           </nav>
         </section>
         <section class="trail-hero" aria-labelledby="trail-title">
@@ -46,7 +50,7 @@
             <p class="trail-kicker"><span></span> GUSU FIELD NOTES</p>
             <h1 id="trail-title">带一张旧照，<br><em>去走姑苏。</em></h1>
             <p class="trail-lede">在今天的街巷里，找到老照片留下的细节。每看懂一处，就在地图上点亮一盏灯笼。</p>
-            <div class="trail-actions"><a class="trail-btn trail-primary" href="#trails">打开探索地图 <span aria-hidden="true">↘</span></a><a class="trail-hero-link" href="#trail-journal">打开手记 ↗</a></div>
+            <div class="trail-actions"><a class="trail-btn trail-primary" href="#trails">打开探索地图 <span aria-hidden="true">↘</span></a><a class="trail-hero-link" href="#trail-journal">我的足迹</a></div>
             <div class="trail-hero-meta"><span>3 条路线</span><span>20 处影像坐标</span><span>可在现场或线上探索</span></div>
           </div>
           <figure class="trail-hero-photo">
@@ -63,8 +67,8 @@
             </figcaption>
           </figure>
         </section>
-        <section id="trails" class="trail-section" aria-labelledby="trails-title">
-          <div class="trail-heading"><div><p class="trail-kicker">01 / EXPLORE</p><h2 id="trails-title">从哪儿出发？</h2></div><p>找一座消失的楼阁，认出老街的轮廓，或沿河看看从前的生活。</p></div>
+        <section id="trails" hidden class="trail-section" aria-labelledby="trails-title">
+          <div class="trail-panel-toolbar"><button id="trail-panel-all-points" type="button" class="trail-btn trail-primary" data-action="map-scope" hidden>返回全部点位</button><button type="button" class="trail-btn" data-close-panel>收起路线</button></div><div class="trail-heading"><div><p class="trail-kicker">探索路线</p><h2 id="trails-title">选一条路，慢慢走</h2></div><p>找一座消失的楼阁，认出老街的轮廓，或沿河看看从前的生活。</p></div>
           <div class="trail-explore-grid">
             <section id="trail-desktop-map-mount" aria-labelledby="trail-desktop-map-title">
               <div class="trail-desktop-map-head">
@@ -80,7 +84,7 @@
             <div class="trail-route-sidebar">
               <h3 class="trail-sidebar-title">主题路线</h3>
               <div id="trail-options" class="trail-options" aria-label="主题路线"></div>
-              <button class="trail-btn postcard-atlas-entry" type="button" data-action="postcard-gallery">明信片动画 · 20 张旧照 →</button>
+              <button class="trail-btn postcard-atlas-entry" type="button" data-action="postcard-gallery">扫描明信片</button>
               <section id="trail-workspace" aria-labelledby="trail-workspace-title" hidden>
                 <div id="trail-session-head" class="trail-session-head"></div>
                 <div class="trail-station-panel">
@@ -92,14 +96,44 @@
             </div>
           </div>
         </section>
-        <section id="trail-journal" class="trail-section trail-journal" aria-labelledby="trail-journal-title">
-          <div class="trail-heading"><div><p class="trail-kicker">02 / COLLECT</p><h2 id="trail-journal-title">探索手记</h2></div><p>收好沿途的照片与发现，下次打开还能接着走。</p></div>
-          <div class="trail-toggle trail-journal-tabs" role="group" aria-label="手记分类"><button type="button" data-journal="field" aria-pressed="true">现场</button><button type="button" data-journal="preview" aria-pressed="false">线上</button></div>
+        <section id="trail-journal" hidden class="trail-section trail-journal" aria-labelledby="trail-journal-title">
+          <button type="button" class="trail-panel-close trail-btn" data-close-panel>返回地图</button><div class="trail-heading"><div><p class="trail-kicker">我的探索</p><h2 id="trail-journal-title">我的足迹</h2></div><p>接着上次的路线走，回看沿途的照片与发现。</p></div>
+          <div id="trail-footprint-overview"></div>
+          <div class="trail-toggle trail-journal-tabs" role="group" aria-label="足迹分类"><button type="button" data-journal="all" aria-pressed="true">全部足迹</button><button type="button" data-journal="field" aria-pressed="false">现场漫步</button><button type="button" data-journal="preview" aria-pressed="false">线上探索</button></div>
           <div id="trail-journal-list"></div>
         </section>
       </div>
-      <details id="trail-archive" class="trail-archive">
-        <summary>打开完整影像档案 <span>浏览原有点位、古今对照与拍照工具</span></summary>
+      <dialog id="comparison-intro" class="home-example" aria-labelledby="comparison-intro-title"><div class="comparison-intro-card">
+        <div class="comparison-intro-head"><div><p class="trail-kicker">出发前，试着看一看</p><h2 id="comparison-intro-title">同一条街，两个时代</h2><p>用手指或鼠标擦一擦旧照片，露出今天的观前街，看看同一个地方发生了哪些变化。</p></div><button type="button" class="trail-dialog-close" data-close-intro aria-label="关闭示例">×</button></div>
+        <div class="hero-demo" id="hero-demo">
+          <div class="hero-studio-toolbar">
+            <div class="mode-switcher hero-mode-switcher" role="group" aria-label="Homepage comparison mode">
+              <button class="is-active" data-hero-mode="erase" type="button">擦除看今景</button>
+              <button data-hero-mode="fade" type="button">时光叠影</button>
+              <button data-hero-mode="lens" type="button">寻影镜</button>
+              <button data-hero-mode="blink" type="button">时光闪回</button>
+            </div>
+          </div>
+          <div id="hero-stage" class="demo-stage compare-component" data-mode="erase" tabindex="0" aria-label="按住鼠标或用手指擦除旧照，露出今景；键盘方向键移动，空格擦除">
+            <img class="compare-base" src="images/optimized/20003B-观前街-1930年代-苏州通史-2024.webp" decoding="async" alt="Guanqian Street in 2024" />
+            <div id="hero-old-wrap" class="compare-old-wrap"><img src="images/optimized/20003A-观前街-1930年代-苏州通史.webp" decoding="async" alt="Archival view of Guanqian Street in the 1930s" /></div>
+            <div id="hero-handle" class="compare-handle"><span>↔</span></div>
+            <div id="hero-lens-outline" class="lens-outline" aria-hidden="true"></div>
+            <span class="image-label label-past">ARCHIVE</span><span class="image-label label-now">TODAY</span>
+            <span class="media-credit media-credit-old">1930年代 · 选自《苏州通史》</span><span class="media-credit media-credit-now">2024 · 来源：古城阳面</span>
+            <input id="hero-slider" class="compare-input" type="range" min="0" max="100" value="52" aria-label="Drag to compare archival and present-day photographs" />
+          </div>
+          <button id="hero-erase-reset" class="trail-text-btn" type="button">重新擦除</button>
+          <div id="hero-control-row" class="studio-control-row">
+            <label id="hero-opacity-control" class="comparison-range hidden" for="hero-opacity"><span>Archival visibility</span><input id="hero-opacity" type="range" min="0" max="1" step="0.01" value="0.5" /><output id="hero-opacity-value">50%</output></label>
+            <button id="hero-blink-toggle" class="studio-action hidden" type="button">Pause flashback</button>
+          </div>
+          <div class="demo-caption"><div><strong>Guanqian Street · 观前街</strong><span id="hero-hint">1930s → 2024 · Drag to reveal the changing street.</span></div></div>
+        </div>
+        <button type="button" class="trail-btn trail-primary comparison-intro-start" data-close-intro>明白了，去地图探索</button>
+      </div></dialog>
+      <details id="trail-archive" class="trail-archive" hidden inert>
+        <summary>影像档案</summary>
         <section class="mobile-invitation" aria-label="姑苏寻影"><div><p>SUZHOU · A WALK THROUGH TIME</p><h2>旧影为引，<br /><em>姑苏等你来寻。</em></h2><span>从一处轮廓，发现一座城。</span></div><a href="#route" aria-label="开始探索地图">开始寻影 <span>↘</span></a></section>
       <section class="hero-section" aria-labelledby="hero-title">
         <div class="hero-copy-wrap">
@@ -115,30 +149,6 @@
           </div>
         </div>
 
-        <div class="hero-demo" id="hero-demo">
-          <div class="hero-studio-toolbar">
-            <div class="mode-switcher hero-mode-switcher" role="group" aria-label="Homepage comparison mode">
-              <button class="is-active" data-hero-mode="reveal" type="button">古今对照</button>
-              <button data-hero-mode="fade" type="button">时光叠影</button>
-              <button data-hero-mode="lens" type="button">寻影镜</button>
-              <button data-hero-mode="blink" type="button">时光闪回</button>
-            </div>
-          </div>
-          <div id="hero-stage" class="demo-stage compare-component" data-mode="reveal">
-            <img class="compare-base" data-desktop-src="images/optimized/20003B-观前街-1930年代-苏州通史-2024.webp" decoding="async" alt="Guanqian Street in 2024" />
-            <div id="hero-old-wrap" class="compare-old-wrap"><img data-desktop-src="images/optimized/20003A-观前街-1930年代-苏州通史.webp" decoding="async" alt="Archival view of Guanqian Street in the 1930s" /></div>
-            <div id="hero-handle" class="compare-handle"><span>↔</span></div>
-            <div id="hero-lens-outline" class="lens-outline" aria-hidden="true"></div>
-            <span class="image-label label-past">ARCHIVE</span><span class="image-label label-now">TODAY</span>
-            <span class="media-credit media-credit-old">1930年代 · 选自《苏州通史》</span><span class="media-credit media-credit-now">2024 · 来源：古城阳面</span>
-            <input id="hero-slider" class="compare-input" type="range" min="0" max="100" value="52" aria-label="Drag to compare archival and present-day photographs" />
-          </div>
-          <div id="hero-control-row" class="studio-control-row">
-            <label id="hero-opacity-control" class="comparison-range hidden" for="hero-opacity"><span>Archival visibility</span><input id="hero-opacity" type="range" min="0" max="1" step="0.01" value="0.5" /><output id="hero-opacity-value">50%</output></label>
-            <button id="hero-blink-toggle" class="studio-action hidden" type="button">Pause flashback</button>
-          </div>
-          <div class="demo-caption"><div><strong>Guanqian Street · 观前街</strong><span id="hero-hint">1930s → 2024 · Drag to reveal the changing street.</span></div></div>
-        </div>
       </section>
 
       <section id="stories" class="stories-section section-block" aria-labelledby="stories-title">
@@ -419,7 +429,7 @@
       <p class="trail-note">按正面、背面依次打印。用 A6 横向纸张时，双面打印可选短边翻转。</p>
       <div class="trail-actions">
         <button id="postcard-print-all" class="trail-btn trail-primary" type="button">打印整套 / 另存 PDF</button>
-        <button id="postcard-demo" class="trail-btn" type="button">试扫这张明信片 · 无需定位</button>
+        <button id="postcard-demo" class="trail-btn" type="button">扫描明信片</button>
       </div>
     </div>
   </dialog>
@@ -442,13 +452,13 @@
   </section>
   <footer><span>GUSU HISTORIC PHOTOGRAPH FIELD PROJECT</span><span>现代重拍 © 古城阳面 · 仅限 HER Lab 教学及学生毕业成果使用</span></footer>
   <script src="vendor/maplibre-gl.js"></script>
-  <script src="app.js?v=27"></script>
+  <script src="app.js?v=32"></script>
   <script src="trail-data.js?v=3"></script>
   <script src="spatial-ar.js?v=1"></script>
   <script src="postcard-print.js?v=6"></script>
   <script src="postcard-scan.js?v=4"></script>
   <script src="postcard-ar.js?v=9"></script>
-  <script src="trail.js?v=17"></script>
+  <script src="trail.js?v=22"></script>
 </body>
 </html>
 

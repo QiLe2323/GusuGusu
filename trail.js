@@ -25,7 +25,7 @@
   const progress = readProgress();
   let route = routeById.get(progress.last?.id);
   let mode = ["field", "preview"].includes(progress.last?.mode) ? progress.last.mode : null;
-  let journalMode = mode || "field";
+  let journalMode = "all";
   let task = null;
   let revealed = false;
   let cameraTask = null;
@@ -107,10 +107,10 @@
       <button type="button" class="trail-btn" data-print-route="${route.id}">打印路线明信片</button>
       ${mode ? `<span class="trail-meter"><progress max="${length}" value="${done}" aria-label="路线进度"></progress><b>${done} / ${length} 站</b></span>
       <button type="button" class="trail-btn" data-action="pause">暂停探索</button>`
-      : `<button type="button" class="trail-btn trail-primary" data-mode="field">${count(route, "field") || route.ids.some(id => trip(route, "field").arrived[id]) ? "继续现场漫步" : "开始现场漫步"} →</button>
+      : `<button type="button" class="trail-btn trail-primary" data-mode="field">${count(route, "field") || route.ids.some(id => trip(route, "field").arrived[id]) ? "继续现场漫步" : "开始现场漫步"}</button>
       <button type="button" class="trail-btn" data-mode="preview">${count(route, "preview") ? "继续线上体验" : "先在线上体验"}</button>`}</div>`;
 
-    $("trail-stops").innerHTML = `<p class="trail-kicker">WALKING ORDER / 站点顺序</p><ol class="trail-stops">${route.ids.map((id, index) => {
+    $("trail-stops").innerHTML = `<p class="trail-kicker">沿途站点</p><ol class="trail-stops">${route.ids.map((id, index) => {
       const complete = mode && trip().cards[id];
       const state = complete ? "已收集" : id === next ? (canOpen(id) ? "线索已解锁" : "前往此站") : mode ? "待解锁" : trailClues[id].type;
       return `<li class="${id === next ? "trail-next" : ""}"><span class="trail-stop-number">${complete ? "✓" : String(index + 1).padStart(2, "0")}</span>
@@ -125,13 +125,13 @@
     if (!mode) {
       panel.innerHTML = `<p class="trail-note">出发前可打印明信片，带到现场对照。约 ${arrivalRadius} 米内且定位精度足够时可打开本站任务。</p>`;
     } else if (!next) {
-      panel.innerHTML = `<div class="trail-current-box"><p class="trail-kicker">WALK COMPLETE</p><h4>${mode === "field" ? "你走完了这条路线。" : "你读完了这条路线。"}</h4><p>${route.ids.length} 站 · ${route.ids.length} 张历史卡片</p><button class="trail-btn trail-primary" type="button" data-summary="${route.id}" data-kind="${mode}">查看探索记录 →</button></div>`;
+      panel.innerHTML = `<div class="trail-current-box"><p class="trail-kicker">探索完成</p><h4>${mode === "field" ? "你走完了这条路线。" : "你读完了这条路线。"}</h4><p>${route.ids.length} 站 · ${route.ids.length} 张历史卡片</p><button class="trail-btn trail-primary" type="button" data-summary="${route.id}" data-kind="${mode}">查看探索记录 →</button></div>`;
     } else {
       const place = byId.get(next);
       const unlocked = canOpen(next);
       panel.innerHTML = `<div class="trail-current-box"><p class="trail-kicker">${unlocked ? (mode === "field" ? "已抵达 · 发现一条线索" : "线上 · 等待你的观察") : "下一站 · 到点解锁"}</p>
         <h4>${place.cn}</h4><p>${unlocked ? (mode === "field" ? "先看看现场，再打开本站任务。" : trailClues[next].type + " · " + trailClues[next].title) : "走到照片的拍摄点附近，线索将自动解锁。"}</p>
-        <div class="trail-actions">${unlocked ? `<button class="trail-btn trail-primary" type="button" data-clue="${next}">查看历史线索 →</button>` : `<button class="trail-btn trail-primary" type="button" data-action="locate">${watchId === null ? "开启定位" : "重新定位"}</button>`}
+        <div class="trail-actions">${unlocked ? `<button class="trail-btn trail-primary" type="button" data-clue="${next}">查看历史线索</button>` : `<button class="trail-btn trail-primary" type="button" data-action="locate">${watchId === null ? "开启定位" : "重新定位"}</button>`}
         ${mode === "field" ? '<a class="trail-btn" id="trail-directions" target="_blank" rel="noreferrer">百度地图 ↗</a>' : ""}</div></div>`;
     }
     renderLocation();
@@ -204,8 +204,8 @@
       <rect width="400" height="230" fill="url(#trail-grid)"/><text x="29" y="34" text-anchor="middle" fill="#284d43" font-size="12">↑ 北</text>
       ${walk ? `<polyline points="${walk.ids.map(id => positions.get(id).join(",")).join(" ")}" fill="none" stroke="#497c6a" stroke-width="3" stroke-dasharray="6 6"/>` : ""}</svg></div><span>站点示意 · 底图加载中或暂不可用</span>`;
     const layer = schematic.querySelector(".trail-schematic-points");
-    const displayScale = (mapWrap.clientWidth || 360) / 400;
-    const groups = groupPoints(points, place => positions.get(place.id), mobileLayout.matches ? 53 / displayScale : 0);
+    const displayScale = (layer.clientWidth || 360) / 400;
+    const groups = groupPoints(points, place => positions.get(place.id), (mobileLayout.matches ? 48 : 62) / displayScale);
     groups.forEach(group => {
       const { place, pixel } = group[0];
       const pin = group.length > 1 ? makeClusterPin(group) : makeMapPin(place);
@@ -225,11 +225,12 @@
     for (const id of ["trail-map-scope", "trail-desktop-map-scope"]) {
       const scope = $(id);
       scope.hidden = !route;
-      scope.textContent = walk ? "全部点位" : "当前路线";
+      scope.textContent = walk ? "返回全部点位" : "查看当前路线";
     }
-    $("trail-mobile-continue").textContent = route ? "继续探索 →" : "开始探索 →";
+    $("trail-panel-all-points").hidden = !walk;
+    $("trail-mobile-continue").textContent = "探索路线";
     const points = walk && mobileLayout.matches ? walk.ids.map(id => byId.get(id)) : places;
-    $("trail-map-caption").textContent = mobileLayout.matches ? "双指移动地图 · 点数字查看附近站点" : walk ? "虚线表示站点顺序。步行请参考导航。" : "老照片 · 待探索　灯笼 · 已探索　阅 · 线上";
+    $("trail-map-caption").textContent = mobileLayout.matches ? "双指缩放 · 拖动地图 · 点数字查看站点" : walk ? "虚线表示站点顺序。步行请参考导航。" : "老照片 · 待探索　灯笼 · 已探索　阅 · 线上";
     if (!mapLoaded) drawSchematic(points, walk);
     updateMap(points, walk, fit);
   }
@@ -240,12 +241,12 @@
       try {
         mapView = new maplibregl.Map({
           container: routeMap, style: "https://tiles.openfreemap.org/styles/positron",
-          center: [120.624, 31.31], zoom: 14, maxZoom: 19, cooperativeGestures: true,
+          center: [120.624, 31.31], zoom: 14, maxZoom: 19, cooperativeGestures: false,
           pixelRatio: Math.min(window.devicePixelRatio || 1, mobileLayout.matches ? 1.5 : 2),
           fadeDuration: mobileLayout.matches ? 0 : 150,
           attributionControl: { compact: true }
         });
-        mapView.scrollZoom.disable();
+        mapView.scrollZoom.enable();
         mapView.addControl(new maplibregl.NavigationControl({ showCompass: false }));
         mapView.once("load", () => {
           mapLoaded = true;
@@ -280,7 +281,11 @@
     if (fit) {
       const bounds = new maplibregl.LngLatBounds();
       (routeCoordinates || points.map(place => [place.lng, place.lat])).forEach(point => bounds.extend(point));
-      mapView.fitBounds(bounds, { padding: walk ? 48 : 32, maxZoom: 16.5, duration: 0 });
+      const panelOpen = !$("trails").hidden;
+      const padding = !mobileLayout.matches && panelOpen
+        ? { top: 180, bottom: 130, left: 80, right: $("trails").offsetWidth + 48 }
+        : { top: 180, bottom: 140, left: 48, right: 48 };
+      mapView.fitBounds(bounds, { padding, maxZoom: 16.5, duration: 0 });
     }
     renderMapPins();
     updatePositionPin();
@@ -427,6 +432,18 @@
     dialog.scrollTop = 0;
   }
 
+  function openPlaceComparison(place) {
+    content.innerHTML = `<div class="trail-dialog-head"><div><p class="trail-kicker">古今对照</p><h2 id="trail-dialog-title" tabindex="-1">${place.cn}</h2></div><button type="button" class="trail-dialog-close" data-action="close" aria-label="关闭">×</button></div>
+      <p class="trail-note">拖动中间的分界线，对照同一地点的过去与今天。</p>
+      <div class="place-comparison" style="--split:50%"><img src="${place.nowPhoto}" alt="${place.cn}今日重拍"><img class="place-comparison-old" src="${place.oldPhoto}" alt="${place.cn}历史照片"><span class="place-split-line" aria-hidden="true"></span><span class="place-era past">旧影</span><span class="place-era now">今景</span><input type="range" min="0" max="100" value="50" aria-label="调整古今照片分界线" data-place-comparison></div>
+      <div class="place-comparison-credits"><span>${place.oldCredit}</span><span>${place.nowCredit}</span></div>
+      <div class="trail-actions"><button type="button" class="trail-btn" data-comparison-back="${place.id}">返回地点详情</button></div>`;
+    showDialog();
+  }
+  dialog.addEventListener('input', event => {
+    if (event.target.matches('[data-place-comparison]')) event.target.parentElement.style.setProperty('--split', event.target.value + '%');
+  });
+
   function openMapPlace(place) {
     const { id } = place;
     if (canOpen(id)) {
@@ -445,7 +462,7 @@
         ${fieldWalk ? `<button type="button" class="trail-btn trail-primary" data-card="${id}" data-walk="${fieldWalk.id}" data-kind="field">查看现场卡片</button>` : ""}
         ${previewWalk ? `<button type="button" class="trail-btn" data-card="${id}" data-walk="${previewWalk.id}" data-kind="preview">查看线上卡片</button>` : ""}
         ${walks.map(walk => `<button type="button" class="trail-btn" data-map-route="${walk.id}">${walk === route ? "继续当前路线" : walk.name} →</button>`).join("")}
-        ${photoLocked ? "" : `<button type="button" class="trail-btn" data-action="postcard-gallery" data-scan-place="${id}">看明信片动画</button>`}
+        ${photoLocked ? "" : `<button type="button" class="trail-btn" data-action="postcard-gallery" data-scan-place="${id}">扫描明信片</button>`}
         ${photoLocked ? "" : `<button type="button" class="trail-btn" data-archive-place="${id}">古今照片对照</button>`}
       </div>`;
     showDialog();
@@ -483,7 +500,7 @@
         </div><figcaption>${place.oldCredit}</figcaption></figure>
         <figure id="trail-modern"><img ${field ? "data-src" : "src"}="${place.nowPhoto}" alt="${place.cn}现代重拍"><figcaption>${place.nowCredit}</figcaption></figure></div>
       ${field ? "" : `<p class="trail-note trail-photo-hint">找到细节了吗？点照片里的标记看看。</p><div class="trail-actions"><button type="button" class="trail-btn" data-action="reveal">揭示照片线索</button>
-        <button type="button" class="trail-btn" data-action="postcard-gallery" data-scan-place="${id}">看明信片动画</button></div>`}
+        <button type="button" class="trail-btn" data-action="postcard-gallery" data-scan-place="${id}">扫描明信片</button></div>`}
       <section id="trail-reveal" class="trail-reveal" hidden><p class="trail-kicker">你发现了 / DISCOVERED</p><h3 tabindex="-1">${clue.label}</h3><p>${clue.story}</p>
       ${field ? '<div id="trail-camera-options" class="trail-actions" hidden><button type="button" class="trail-btn" data-action="spatial-ar">空间 AR 放置旧照</button><button type="button" class="trail-btn" data-action="camera">手动叠加</button></div><p id="trail-ar-status" class="trail-note" tabindex="-1" role="status"></p>' : ""}
       <label for="trail-note-input">写下一句发现 <small>可选</small></label><textarea id="trail-note-input" rows="2" maxlength="140" placeholder="我注意到……"></textarea>
@@ -518,15 +535,12 @@
     stopPostcardScan();
     task = null;
     content.innerHTML = `<div class="trail-dialog-head"><div><p class="trail-kicker">明信片 AR · 无需定位</p>
-      <h2 id="trail-dialog-title" tabindex="-1">试扫${place.cn}明信片</h2></div>
+      <h2 id="trail-dialog-title" tabindex="-1">扫描${place.cn}明信片</h2></div>
       <button type="button" class="trail-dialog-close" data-action="close" aria-label="关闭">×</button></div>
       <label class="postcard-scene-choice">选择旧照<select id="postcard-scene-choice">${places.map((item, index) =>
         `<option value="${item.id}" ${item.id === id ? "selected" : ""}>${String(index + 1).padStart(2, "0")} · ${item.cn}</option>`).join("")}</select></label>
-      <p class="trail-task-prompt">对准纸卡正面的旧照。手边没有纸卡，也可以用另一台设备打开下方的试扫图，再用手机对准屏幕。</p>
-      <div class="trail-actions"><button type="button" class="trail-btn trail-primary" data-action="scan-postcard" data-scan-place="${place.id}">打开相机试扫</button>
-      <button type="button" class="trail-btn" data-action="preview-postcard" data-scan-place="${place.id}">直接预览动画</button>
-      <a class="trail-btn" href="pingjiang-preview.html?place=${place.id}">打开纸艺动画 ↗</a>
-      <a class="trail-btn" href="${place.oldPhoto}" target="_blank" rel="noopener">打开试扫图 ↗</a></div>
+      <p class="trail-task-prompt">选择明信片上的地点，打开相机，对准纸卡正面的旧照。</p>
+      <div class="trail-actions"><button type="button" class="trail-btn trail-primary" data-action="scan-postcard" data-scan-place="${place.id}">打开相机扫描</button></div>
       ${postcardScannerMarkup(clue)}`;
     showDialog();
     if (focusPicker) $("postcard-scene-choice").focus();
@@ -649,7 +663,8 @@
       <h2 id="trail-dialog-title" tabindex="-1">${place.cn}</h2><p>${clue.label}</p></div><button type="button" class="trail-dialog-close" data-action="close" aria-label="关闭">×</button></div>
       <figure class="trail-card-archive"><img src="${place.oldPhoto}" alt="${place.cn}历史照片"><span class="trail-card-seal" aria-hidden="true">${kind === "field" ? "现场寻得" : "线上寻得"}</span><figcaption>${place.oldCredit}</figcaption></figure>
       <p class="trail-card-story">${clue.story}</p><p id="trail-personal-note" class="trail-personal-note" hidden></p>
-      <div class="trail-actions"><button class="trail-btn trail-primary" type="button" data-action="${justCollected ? "continue" : "close"}">${justCollected ? (nextStop(walk, kind) ? "回到路线，前往下一站 →" : "查看路线总结 →") : "完成"}</button>
+      <div class="trail-actions"><button class="trail-btn trail-primary" type="button" data-action="${justCollected ? "continue" : "close"}">${justCollected ? (nextStop(walk, kind) ? "回到路线，前往下一站" : "生成探索纪念卡") : "完成"}</button>
+      <button type="button" class="trail-btn" data-archive-place="${id}">回看古今对照</button>
       <button type="button" class="trail-btn" data-action="download-card">保存卡片 ↓</button></div><p id="trail-dialog-status" role="status"></p>`;
     if (record.note) {
       $("trail-personal-note").hidden = false;
@@ -659,13 +674,30 @@
   }
 
   function renderJournal() {
-    document.querySelectorAll("[data-journal]").forEach(button => button.setAttribute("aria-pressed", button.dataset.journal === journalMode));
-    const entries = trailRoutes.filter(walk => count(walk, journalMode));
-    $("trail-journal-list").innerHTML = entries.length ? entries.map(walk => `<section class="trail-journal-entry">
-      <div class="trail-journal-head"><div><h3>${walk.name}</h3><p>${count(walk, journalMode)} / ${walk.ids.length} 站 · ${labelFor(journalMode)}</p></div>
-      <button type="button" class="trail-btn" data-summary="${walk.id}" data-kind="${journalMode}">查看路线记录 →</button></div>
-      <div class="trail-mini-cards">${walk.ids.filter(id => trip(walk, journalMode).cards[id]).map(id => `<button type="button" data-card="${id}" data-walk="${walk.id}" data-kind="${journalMode}"><img src="${byId.get(id).thumbPhoto}" alt="" loading="lazy"><span>${name(id)}</span><small>${trailClues[id].label}</small></button>`).join("")}</div></section>`).join("")
-      : `<div class="trail-empty"><span class="trail-empty-mark" aria-hidden="true">✧</span><div><b>等一张${journalMode === "field" ? "现场" : "线上"}探索卡片</b><p>打开第一条线索，给手记添上第一页。</p></div><a class="trail-btn" href="#trails">去选路线 ↗</a></div>`;
+    const kinds = ['field', 'preview'];
+    const records = trailRoutes.flatMap(walk => kinds.map(kind => ({ walk, kind, done: count(walk, kind), record: trip(walk, kind) })))
+      .filter(item => item.done || Object.keys(item.record.arrived).length);
+    const recentTime = item => Math.max(0, ...Object.values(item.record.cards).map(card => Date.parse(card.date) || 0));
+    const unfinished = records.filter(item => item.done < item.walk.ids.length).sort((a, b) => recentTime(b) - recentTime(a));
+    const last = progress.last;
+    const savedWalk = routeById.get(last?.id);
+    const resume = unfinished.find(item => item.walk.id === last?.id && item.kind === last?.mode) || unfinished[0]
+      || (savedWalk && !records.some(item => item.walk === savedWalk && item.done === item.walk.ids.length) ? { walk: savedWalk, kind: null, done: 0 } : null);
+    const visitedIds = new Set(records.flatMap(item => Object.keys(item.record.cards)));
+    const completed = records.filter(item => item.done === item.walk.ids.length);
+    $("trail-footprint-overview").innerHTML = `<div class="footprint-stats"><span><b>${visitedIds.size}</b>探索地点</span><span><b>${completed.length}</b>完成路线</span></div>
+      ${resume ? `<section class="footprint-resume"><p class="trail-kicker">${resume.kind ? '接着上次，继续走' : '你选好的下一段旅程'}</p><h3>${resume.walk.name}</h3><p>${resume.done} / ${resume.walk.ids.length} 站${resume.kind ? ' · ' + labelFor(resume.kind) : ' · 尚未出发'}</p>
+        <progress max="${resume.walk.ids.length}" value="${resume.done}" aria-label="上次路线完成进度"></progress>
+        <p class="footprint-next">${resume.kind ? '下一站 · ' + name(nextStop(resume.walk, resume.kind)) : '选择现场漫步或线上体验，即可开始。'}</p>
+        <button type="button" class="trail-btn trail-primary" data-resume-walk="${resume.walk.id}" data-kind="${resume.kind || ''}">${resume.kind ? '继续探索' : '准备出发'}</button></section>` : ''}
+      <p class="footprint-help">探索记录会自动保存在当前浏览器。走完一条路线，就能留下一张专属纪念卡。</p>`;
+    document.querySelectorAll('[data-journal]').forEach(button => button.setAttribute('aria-pressed', button.dataset.journal === journalMode));
+    const entries = records.filter(item => item.done && (journalMode === 'all' || item.kind === journalMode));
+    $("trail-journal-list").innerHTML = entries.length ? entries.map(({walk, kind, done}) => `<section class="trail-journal-entry">
+      <div class="trail-journal-head"><div><h3>${walk.name}</h3><p>${done} / ${walk.ids.length} 站 · ${labelFor(kind)}</p></div>
+      <button type="button" class="trail-btn" data-summary="${walk.id}" data-kind="${kind}">${done === walk.ids.length ? '生成探索纪念卡' : '回看探索记录'}</button></div>
+      <div class="trail-mini-cards">${walk.ids.filter(id => trip(walk, kind).cards[id]).map(id => `<button type="button" data-card="${id}" data-walk="${walk.id}" data-kind="${kind}"><img src="${byId.get(id).thumbPhoto}" alt="${name(id)}旧照" loading="lazy"><span>${name(id)}</span><small>${formatDay(trip(walk, kind).cards[id].date)}</small></button>`).join('')}</div></section>`).join('')
+      : `<div class="trail-empty"><div><b>${journalMode === 'all' ? '你的姑苏足迹，从第一站开始' : '还没有' + (journalMode === 'field' ? '现场漫步' : '线上探索') + '记录'}</b><p>探索地点后，旧照、今景与发现会自动收在这里，无需另外写手记。</p></div><a class="trail-btn" href="#trails">去选一条路线</a></div>`;
   }
 
   function openSummary(walk, kind) {
@@ -675,7 +707,7 @@
       <h2 id="trail-dialog-title" tabindex="-1">${walk.name}</h2><p>已探索 ${ids.length} 处地点，收集 ${ids.length} 张历史卡片。</p></div><button type="button" class="trail-dialog-close" data-action="close" aria-label="关闭">×</button></div>
       <ol class="trail-summary-list">${walk.ids.map((id, index) => `<li><b>${index + 1}</b><span>${name(id)}</span><small>${ids.includes(id) ? trailClues[id].label : "待探索"}</small>
       ${ids.includes(id) ? `<button type="button" class="trail-text-btn" data-card="${id}" data-walk="${walk.id}" data-kind="${kind}">看卡片</button>` : ""}</li>`).join("")}</ol>
-      <div class="trail-actions"><button type="button" class="trail-btn trail-primary" data-action="download-summary">保存路线纪念图 ↓</button><button type="button" class="trail-btn" data-action="summary-map">查看路线地图</button></div>
+      <div class="trail-actions"><button type="button" class="trail-btn trail-primary" data-action="download-summary">保存探索纪念卡</button><button type="button" class="trail-btn" data-action="summary-map">查看路线地图</button></div>
       <p id="trail-dialog-status" role="status"></p>`;
     showDialog();
   }
@@ -689,7 +721,7 @@
     try {
       const canvas = document.createElement("canvas");
       canvas.width = 900;
-      canvas.height = id ? (trip(walk, kind).cards[id].note ? 1200 : 970) : 290 + 142 * ids.length;
+      canvas.height = id ? (trip(walk, kind).cards[id].note ? 1200 : 970) : 530 + 142 * ids.length;
       const ctx = canvas.getContext("2d");
       ctx.fillStyle = "#f6f0e4";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -714,9 +746,23 @@
         if (line) print(line, 60, y, 24);
         return y + 35;
       };
-      print("GUSU FIELD NOTES  /  姑苏探索手记", 60, 61, 24, "#eed3a5");
+      print("GUSU FOOTPRINTS  /  我的姑苏足迹", 60, 61, 24, "#eed3a5");
       print(id ? name(id) : walk.name, 60, 128, 48, "#fff9ec");
       print(labelFor(kind) + " · " + (id ? formatDay(trip(walk, kind).cards[id].date) : `${ids.length} / ${walk.ids.length} 站`), 60, 222, 26);
+      if (!id) {
+        const stops = walk.ids.map(stop => byId.get(stop));
+        const points = stops.map((place, index) => [110 + index * 680 / Math.max(1, stops.length - 1), 345 + (index % 2) * 30]);
+        ctx.fillStyle = '#e5eadf';ctx.fillRect(60, 250, 780, 220);
+        ctx.strokeStyle = '#315e4c';ctx.lineWidth = 3;ctx.beginPath();
+        points.forEach(([x,y], index) => index ? ctx.lineTo(x,y) : ctx.moveTo(x,y));ctx.stroke();
+        points.forEach(([x,y], index) => {
+          ctx.fillStyle = ids.includes(walk.ids[index]) ? '#214f42' : '#9daaa0';
+          ctx.beginPath();ctx.arc(x,y,15,0,Math.PI*2);ctx.fill();
+          ctx.textAlign = 'center';print(String(index+1),x,y+6,16,'#fff');
+          print(stops[index].cn,x,420,18,'#214f42',125);ctx.textAlign = 'left';
+        });
+        print('沿途足迹 · 按探索顺序',80,278,18,'#53675a');
+      }
       for (const [index, stop] of ids.entries()) {
         const place = byId.get(stop);
         const image = await loadImage(place.oldPhoto);
@@ -729,7 +775,7 @@
           const note = trip(walk, kind).cards[id].note;
           if (note) paragraph("我的发现 · " + note.replace(/\s+/g, " "), y + 11);
         } else {
-          const y = 250 + index * 142;
+          const y = 490 + index * 142;
           drawCover(ctx, image, 60, y, 182, 107);
           print(name(stop), 265, y + 27, 30);
           print(trailClues[stop].label, 265, y + 62, 23);
@@ -759,6 +805,8 @@
     route = walk;
     mode = kind;
     showRouteOnMap = true;
+    $("trails").hidden = false;
+    $("trail-journal").hidden = true;
     const saved = writeProgress({ id: route.id, mode });
     renderOptions();
     renderWorkspace(true);
@@ -768,8 +816,7 @@
   }
 
   function mountMap() {
-    const mobile = mobileLayout.matches;
-    $(mobile ? "trail-mobile-map-mount" : "trail-desktop-map-mount").append(mapWrap);
+    $("trail-mobile-map-mount").append(mapWrap);
   }
 
   function returnFromCamera(openClue = true) {
@@ -805,8 +852,7 @@
         refreshMap(true);
         break;
       case "current-trail":
-        if (route) chooseRoute(route, mode);
-        else $("trails").scrollIntoView({ block: "start" });
+        openPanel("trails");
         break;
       case "pause": chooseRoute(route); break;
       case "locate": startLocation(); break;
@@ -902,6 +948,11 @@
     }
     if (data.clue) openTask(data.clue);
     if (data.printRoute) printTrailPostcards(routeById.get(data.printRoute), id => byId.get(id), button);
+    if (data.resumeWalk) {
+      const kind = data.kind || null;
+      chooseRoute(routeById.get(data.resumeWalk), kind);
+      if (kind === 'field') startLocation();
+    }
     if (data.summary) openSummary(routeById.get(data.summary), data.kind);
     if (data.card) openCard(routeById.get(data.walk), data.kind, data.card);
     if (data.journal) {
@@ -913,6 +964,7 @@
   dialog.addEventListener("click", event => {
     const button = event.target.closest("button");
     if (!button) return;
+    if (button.dataset.comparisonBack) openMapPlace(byId.get(button.dataset.comparisonBack));
     if (button.dataset.clusterPlace) openMapPlace(byId.get(button.dataset.clusterPlace));
     if (button.dataset.observation !== undefined && task?.mode === "field") {
       if (Number(button.dataset.observation) === trailObservations[task.id].answer) revealTask();
@@ -925,9 +977,7 @@
       chooseRoute(walk, walk === route ? mode : null);
     }
     if (button.dataset.archivePlace) {
-      dialog.close();
-      $("trail-archive").open = true;
-      openRemote(byId.get(button.dataset.archivePlace));
+      openPlaceComparison(byId.get(button.dataset.archivePlace));
     }
     if (button.dataset.action) perform(button.dataset.action, button);
   });
@@ -971,6 +1021,75 @@
     mountMap();
     refreshMap(true);
   });
+
+  const panels = [$("trails"), $("trail-journal")];
+  function openPanel(id) {
+    panels.forEach(panel => { panel.hidden = panel.id !== id; });
+    if (id === 'trails') {
+      stopLocation();
+      route = null;
+      mode = null;
+      showRouteOnMap = false;
+      renderOptions();
+      renderWorkspace(true);
+    }
+    panels.forEach(panel => { panel.hidden = panel.id !== id; });
+    if (id === 'trail-journal') renderJournal();
+    const panel = $(id);
+    if (panel && panels.includes(panel)) {
+      panel.scrollTop = 0;
+      panel.querySelector('[data-close-panel]').focus({ preventScroll: true });
+    }
+  }
+  document.addEventListener("click", event => {
+    const close = event.target.closest('[data-close-panel]');
+    const link = event.target.closest('a[href^="#"]');
+    if (close || link?.getAttribute('href') === '#top' || link?.getAttribute('href') === '#trail-mobile-map') {
+      panels.forEach(panel => { panel.hidden = true; });
+      $("trail-mobile-continue").focus({ preventScroll: true });
+    } else if (link && ['#trails', '#trail-journal'].includes(link.getAttribute('href'))) {
+      event.preventDefault();
+      openPanel(link.getAttribute('href').slice(1));
+    }
+
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !dialog.open) panels.forEach(panel => { panel.hidden = true; });
+  });
+
+  const searchInput = $("map-search-input");
+  const searchResults = $("map-search-results");
+  function clearSearch() {
+    searchInput.value = '';
+    searchResults.hidden = true;
+    $("map-search-clear").hidden = true;
+  }
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.trim().toLocaleLowerCase();
+    $("map-search-clear").hidden = !query;
+    searchResults.hidden = !query;
+    if (!query) return;
+    const matches = places.filter(place => [place.cn, place.name, place.description].filter(Boolean).join(' ').toLocaleLowerCase().includes(query));
+    searchResults.innerHTML = matches.length ? matches.slice(0, 8).map(place => `<button type="button" data-search-place="${place.id}"><span>${place.cn}</span><small>${pinStatus(place.id) ? '已探索' : '查看地点'}</small></button>`).join('') : '<p>没有找到这个地点，试试“观前街”或“平江”。</p>';
+  });
+  $("map-search-clear").addEventListener('click', () => { clearSearch(); searchInput.focus(); });
+  searchInput.addEventListener('keydown', event => {
+    if (event.key === 'ArrowDown') { event.preventDefault(); searchResults.querySelector('button')?.focus(); }
+    if (event.key === 'Escape') clearSearch();
+    if (event.key === 'Enter') { event.preventDefault(); searchResults.querySelector('button')?.click(); }
+  });
+  searchResults.addEventListener('click', event => {
+    const button = event.target.closest('[data-search-place]');
+    if (!button) return;
+    const place = byId.get(button.dataset.searchPlace);
+    clearSearch();
+    mapView?.easeTo({ center: [place.lng, place.lat], zoom: 16, duration: 450 });
+    openMapPlace(place);
+  });
+  document.addEventListener('pointerdown', event => {
+    if (!event.target.closest('.map-search')) searchResults.hidden = true;
+  });
+  searchInput.addEventListener('focus', () => { if (searchInput.value.trim()) searchResults.hidden = false; });
   mountMap();
   renderOptions();
   renderWorkspace(true);
